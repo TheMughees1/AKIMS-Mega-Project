@@ -1,0 +1,30 @@
+import { pool, demoEnabled } from "./db";
+import { User } from "./auth";
+export async function portalData(user:User) {
+  const personal=["student","alumni"].includes(user.role);
+  const manager=["admin","accounts"].includes(user.role);
+  const staff=user.role==="staff";
+  let scope="$1::uuid IS NULL";
+  if(personal)scope="s.user_id=$1";
+  if(manager)scope="$1::uuid IS NOT NULL";
+  if(staff)scope="EXISTS(SELECT 1 FROM clearance_checks ck JOIN staff_assignments sa ON sa.department_id=ck.department_id WHERE ck.request_id=r.id AND sa.user_id=$1)";
+  const requests=(await pool.query("SELECT r.*,s.student_number,u.name AS student_name,p.abbreviation AS program,e.batch,e.semester,cert.id AS certificate_id,cert.status AS certificate_status FROM clearance_requests r JOIN students s ON s.id=r.student_id JOIN users u ON u.id=s.user_id JOIN enrollments e ON e.id=r.enrollment_id JOIN programs p ON p.id=e.program_id LEFT JOIN certificates cert ON cert.request_id=r.id WHERE "+scope+" ORDER BY r.created_at DESC",[user.id])).rows;
+  const ids=requests.map(r=>r.id);
+  const checks=(await pool.query("SELECT c.*,d.name AS department_name FROM clearance_checks c JOIN departments d ON d.id=c.department_id WHERE c.request_id=ANY($1::uuid[])"+(staff?" AND c.department_id IN(SELECT department_id FROM staff_assignments WHERE user_id=$2)":"")+" ORDER BY d.name",staff?[ids,user.id]:[ids])).rows;
+  const incidents=(await pool.query("SELECT i.*,d.name AS department_name,u.name AS student_name,s.student_number FROM incidents i JOIN departments d ON d.id=i.department_id JOIN clearance_requests r ON r.id=i.request_id JOIN students s ON s.id=r.student_id JOIN users u ON u.id=s.user_id WHERE i.request_id=ANY($1::uuid[])"+(staff?" AND i.department_id IN(SELECT department_id FROM staff_assignments WHERE user_id=$2)":"")+" ORDER BY i.created_at DESC",staff?[ids,user.id]:[ids])).rows;
+  const challans=(manager||personal)?(await pool.query("SELECT c.*,u.name AS student_name,s.student_number FROM challans c JOIN clearance_requests r ON r.id=c.request_id JOIN students s ON s.id=r.student_id JOIN users u ON u.id=s.user_id WHERE c.request_id=ANY($1::uuid[]) ORDER BY c.created_at DESC",[ids])).rows:[];
+  const payments=(manager||personal)?(await pool.query("SELECT p.id,p.challan_id,p.amount_paisa,p.transaction_reference,p.paid_on,p.status,p.created_at,p.note,c.number AS challan_number,c.request_id,u.name AS student_name,s.student_number FROM payments p JOIN challans c ON c.id=p.challan_id JOIN clearance_requests r ON r.id=c.request_id JOIN students s ON s.id=r.student_id JOIN users u ON u.id=s.user_id WHERE c.request_id=ANY($1::uuid[]) ORDER BY p.created_at DESC",[ids])).rows:[];
+  const inventory=(user.role==="admin"||staff)?(await pool.query("SELECT i.*,d.name AS department_name FROM inventory i JOIN departments d ON d.id=i.department_id WHERE NOT i.retired"+(staff?" AND i.department_id IN(SELECT department_id FROM staff_assignments WHERE user_id=$1)":"")+" ORDER BY i.name",staff?[user.id]:[])).rows:[];
+  const students=(personal||user.role==="admin"||staff)?(await pool.query("SELECT s.id,s.student_number,s.phone,s.alumni,u.name,u.email,e.id AS enrollment_id,p.name AS program_name,p.abbreviation AS program,e.batch,e.semester,e.status FROM students s JOIN users u ON u.id=s.user_id JOIN enrollments e ON e.student_id=s.id JOIN programs p ON p.id=e.program_id WHERE "+(personal?"s.user_id=$1":staff?"EXISTS(SELECT 1 FROM program_requirements pr JOIN staff_assignments sa ON sa.department_id=pr.department_id WHERE pr.program_id=e.program_id AND sa.user_id=$1)":"$1::uuid IS NOT NULL")+" ORDER BY u.name",[user.id])).rows:[];
+  const departments=(await pool.query("SELECT * FROM departments WHERE "+(staff?"id IN(SELECT department_id FROM staff_assignments WHERE user_id=$1)":"$1::uuid IS NOT NULL")+" ORDER BY name",[user.id])).rows;
+  const events=(await pool.query("SELECT a.id,a.action,a.detail,a.created_at,a.request_id,u.name AS actor_name FROM audit_events a LEFT JOIN users u ON u.id=a.actor_id WHERE "+(user.role==="admin"?"$1::uuid IS NOT NULL":personal?"a.request_id=ANY($2::uuid[]) AND $1::uuid IS NOT NULL":"a.actor_id=$1")+" ORDER BY a.created_at DESC LIMIT 100",personal?[user.id,ids]:[user.id])).rows;
+  const announcements=(await pool.query("SELECT * FROM announcements WHERE $1=ANY(audience) ORDER BY published_at DESC",[user.role])).rows;
+  const classes=user.role==="teacher"?(await pool.query("SELECT c.*,p.abbreviation AS program FROM classes c JOIN programs p ON p.id=c.program_id WHERE teacher_id=$1 ORDER BY c.name",[user.id])).rows:[];
+  const observations=user.role==="teacher"?(await pool.query("SELECT o.*,c.name AS class_name FROM class_observations o JOIN classes c ON c.id=o.class_id WHERE o.teacher_id=$1 ORDER BY o.created_at DESC",[user.id])).rows:[];
+  const users=user.role==="admin"?(await pool.query("SELECT u.id,u.name,u.email,u.active,array_agg(r.role) AS roles FROM users u JOIN user_roles r ON r.user_id=u.id GROUP BY u.id ORDER BY u.name")).rows:[];
+  const settings=user.role==="admin"?Object.fromEntries((await pool.query("SELECT * FROM settings")).rows.map(r=>[r.key,r.value])):{};
+  const approver=(await pool.query("SELECT value FROM settings WHERE key='final_approver'")).rows[0]?.value;
+  const programs=user.role==="admin"?(await pool.query("SELECT * FROM programs ORDER BY name")).rows:[];
+  const imports=user.role==="admin"?(await pool.query("SELECT b.id,b.row_count,b.created_at,u.name AS actor_name FROM import_batches b JOIN users u ON u.id=b.actor_id ORDER BY b.created_at DESC LIMIT 20")).rows:[];
+  return JSON.parse(JSON.stringify({user,demo:demoEnabled(),requests,checks,incidents,challans,payments,inventory,students,departments,events,announcements,classes,observations,users,settings,programs,imports,canFinalize:user.id===approver}));
+}
