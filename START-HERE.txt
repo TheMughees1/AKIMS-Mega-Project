@@ -1,0 +1,64 @@
+AKIMS CAMPUS — SIMPLE HTML / CSS / JAVASCRIPT DEMO
+
+CHALANE KA TAREEQA
+1. ZIP par right-click karke Extract All karein.
+2. Extracted folder kholein.
+3. index.html par double-click karein.
+4. Chrome, Edge ya Firefox mein demo role choose karein.
+
+Bas! Node.js, npm, Ubuntu, database installation aur terminal commands ki
+zarurat nahin. ZIP ke andar se seedha file na kholein: pehle extract karein.
+index.html ke saath style.css, script.js aur poora assets folder rehna chahiye.
+
+VS CODE MEIN DEKHNA
+VS Code > File > Open Folder > extracted AKIMS folder select karein.
+Files edit karne ke baad save karein aur browser refresh karein.
+VS Code Live Server optional hai; double-click se bhi demo chalta hai.
+
+FILES KA KAAM
+index.html       Page ka basic structure aur files ke links.
+style.css        Rang, fonts, spacing, mobile layout aur print design.
+script.js        Screens, buttons, forms, imports aur document previews.
+assets/data.js   Fictional sample data aur demo clearance workflow.
+assets/images/  Placeholder logo aur illustration.
+assets/fonts/   Local fonts; download ke baad internet ki zarurat nahin.
+
+DEMO KA FLOW
+Student: clearance request submit karein.
+Switch workspace > Administration: request kholein, lab issue/charge add
+karein aur departments ka assessment complete karein. Phir challan issue karein.
+Student: challan dekhein; sample receipt select karke reference submit karein.
+Accounts: sample reference aur exact amount enter karke payment verify karein.
+Administration: remaining departments clear karke final authorization karein.
+Student: certificate kholein, Print / Save PDF choose karein. Print dialog
+mein printer ki jagah Save as PDF select kiya ja sakta hai.
+Zero-dues request mein challan aur payment ki zarurat nahin hoti.
+
+YE DEMO HAI
+Saare students, policies, bank fields aur documents sample hain.
+Demo documents se payment na karein. Asli student data, passwords ya receipts
+is version mein na daalein. Role switching demonstration hai, secure login nahin.
+Receipt ki file contents save/upload nahin hoti; sirf sample file details save
+hoti hain. Sab roles ek hi browser ke demo data par kaam karte hain.
+
+DATA KAHAN SAVE HOTA HAI?
+Browser storage available ho to data us browser mein save rehta hai.
+Browser data clear karne, private mode, file ko move/rename karne, browser
+badalne ya Live Server address badalne se saved demo alag/gaib ho sakta hai.
+Storage blocked ho to portal warning dikhata hai aur changes tab mein rehte hain.
+Administration mein Export demo data se JSON copy le sakte hain; automatic restore included nahin.
+Reset demo fictional starting records wapas lata hai aur current demo changes
+mita deta hai. Do computers ka data automatically share nahin hota.
+
+LIVE KARNA
+Static demo ke liye saari files ek folder mein hosting par upload karein,
+index.html ko us folder ka start page rakhein. Demo ka live hona shared
+student system nahin banata: real institutional use ke liye secure server,
+shared database aur login alag se connect karna hoga.
+
+BLANK PAGE?
+ZIP poori extract karein. assets folder missing na ho. JavaScript enabled ho.
+Chrome/Edge mein index.html dubara kholein. Error ho to exact message bhejein.
+
+Existing Next.js version GitHub ki akims-mvp branch par alag available hai.
+Is simple folder ko chalane ke liye us version ki files ki zarurat nahin.
