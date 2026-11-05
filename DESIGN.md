@@ -1,5 +1,7 @@
 # AKIMS design direction and skill review
 
+**Brand update, 5 November 2026:** The website-sourced logo, photographs, palette and Inter/Playfair Display fonts now supersede the placeholder identity described in the original plan below. See [BRANDING.md](BRANDING.md).
+
 ## Brief and constraints
 
 AKIMS needs understandable college administration screens, particularly student clearance, departmental reviews and payment verification. The user has confirmed a plain HTML/CSS/JavaScript demonstration that opens from a folder. Keep the existing fictional data, role-specific workspaces, local assets and workflow. Official branding is still unavailable.

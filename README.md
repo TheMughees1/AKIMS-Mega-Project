@@ -24,7 +24,7 @@ AKIMS-Portal/
 ├── script.js             Screens, forms, imports and user interactions
 ├── assets/
 │   ├── data.js           Fictional data, browser storage and workflow rules
-│   ├── images/           Placeholder branding
+│   ├── images/           College logo and photographs
 │   └── fonts/            Local fonts and their licenses
 ├── START-HERE.txt        Beginner instructions in Roman Urdu
 └── README.md             This guide
@@ -60,4 +60,4 @@ Upload this folder's contents to a static website host, keeping all relative pat
 
 The existing server-backed version remains on the separate **[akims-mvp branch](https://github.com/TheMughees1/AKIMS-Mega-Project/tree/akims-mvp)**. This branch is a standalone edition; none of that version's packages are needed here.
 
-Fonts are bundled with their license notices in `assets/fonts`. The logo and illustration are placeholders pending official AKIMS assets.
+Fonts are bundled with their license notices in `assets/fonts`. The logo, campus photographs, brand colors and public contact information were sourced from akims.edu.pk. See [BRANDING.md](BRANDING.md) for exact sources and scope.

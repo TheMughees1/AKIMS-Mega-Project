@@ -23,3 +23,10 @@ The testing tools and test server are development aids and are not required or i
 - The workflow/state module was unchanged; its earlier 22 checks were not repeated for this visual revision. Screen-reader testing with assistive technology and direct Windows file opening remain outstanding; these checks do not establish full accessibility conformance.
 
 See DESIGN.md for the three fetched skills, design rationale and scope boundaries.
+
+## Website branding revision — 5 November 2026
+
+- Re-ran the 46 workflow browser assertions, all 32 mobile role pages and 26 focused interaction checks after applying the official website branding; all passed.
+- Additional entry and Help page axe scans passed the configured WCAG A/AA rules. Verified local logo/photo/font loading without HTTP errors, the public address, mobile width and the embedded logo in the standalone HTML document.
+- Reviewed entry, student desktop and mobile screenshots; adjusted photo positioning to keep the building sign in view. Original image files remain unchanged.
+- Branding sources and limits are recorded in BRANDING.md. The previous direct-file and screen-reader testing limits still apply.

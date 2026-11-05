@@ -1,21 +1,54 @@
 /* AKIMS Campus. Plain CSS, locally bundled fonts, no build step. */
-@font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-latin-400-normal.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
-@font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-latin-500-normal.woff2") format("woff2"); font-style: normal; font-weight: 500; font-display: swap; }
-@font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-latin-600-normal.woff2") format("woff2"); font-style: normal; font-weight: 600; font-display: swap; }
-@font-face { font-family: "DM Sans"; src: url("assets/fonts/dm-sans-latin-700-normal.woff2") format("woff2"); font-style: normal; font-weight: 700; font-display: swap; }
-@font-face { font-family: "DM Serif Display"; src: url("assets/fonts/dm-serif-display-latin-400-normal.woff2") format("woff2"); font-style: normal; font-weight: 400; font-display: swap; }
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/inter-400.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/inter-500.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/inter-600.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/inter-700.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/playfair-display-400.ttf) format('truetype');
+}
 
 :root {
   color-scheme: light;
   --bg: #f7f8f5;
   --surface: #fff;
-  --ink: #203d36;
+  --ink: #022c22;
   --text: #354940;
   --muted: #68756c;
-  --green: #173f35;
-  --green-hover: #235545;
+  --green: #064e3b;
+  --brand-dark: #022c22;
+  --brand-gold: #d4af37;
+  --brand-accent: #10b981;
+  --green-hover: #166534;
   --line: #e1e7df;
-  --lime: #dce9a6;
+  --lime: #d1fae5;
   --tint: #edf3e8;
   --danger: #a33435;
   --radius: 12px;
@@ -24,8 +57,8 @@
   --layer-feedback: 40;
   --layer-accessibility: 50;
   --shadow: 0 8px 32px rgb(28 52 40 / 5%);
-  --body-font: "DM Sans", "Segoe UI", Arial, sans-serif;
-  --title-font: "DM Serif Display", Georgia, serif;
+  --body-font: "Inter", "Segoe UI", Arial, sans-serif;
+  --title-font: "Playfair Display", Georgia, serif;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: auto; }
@@ -105,7 +138,7 @@ hr, .divider { width: 100%; height: 1px; border: 0; margin: 22px 0; background: 
 .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 13px; border: 0; border-radius: 9px; color: #dce7dd; background: transparent; text-align: left; font-size: 13px; font-weight: 500; transition: background .16s ease, color .16s ease; }
 .nav-item svg { width: 18px; height: 18px; opacity: .85; }
 .nav-item:hover { background: rgb(255 255 255 / 7%); color: white; }
-.nav-item.active { background: var(--lime); color: #173f35; }
+.nav-item.active { background: var(--lime); color: #064e3b; }
 .nav-item.active svg { opacity: 1; }
 .nav-item:focus-visible, .sidebar button:focus-visible, .sidebar a:focus-visible { outline-color: var(--lime); }
 .nav-item .count { padding: 1px 6px; margin-left: auto; font-size: 10px; border-radius: 5px; background: rgb(255 255 255 / 13%); }
@@ -457,9 +490,9 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   #app, dialog, #toast, .skip-link, .mobile-backdrop { display: none !important; }
   #print-area { display: block !important; }
   #print-area .document-preview { padding: 0; margin: 0; border: 0; border-radius: 0; max-width: none; }
-  #print-area .document-header { display: flex; gap: 18px; align-items: center; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 2px solid #173f35; }
+  #print-area .document-header { display: flex; gap: 18px; align-items: center; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 2px solid #064e3b; }
   #print-area img { width: 50px; }
-  #print-area h1, #print-area h2 { color: #173f35; }
+  #print-area h1, #print-area h2 { color: #064e3b; }
   #print-area h1 { font-size: 25pt; }
   #print-area h2 { font-size: 21pt; }
   #print-area .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -471,4 +504,27 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   #print-area .small, #print-area small { font-size: 9pt; }
   #print-area .panel, #print-area .issue-card { break-inside: avoid; }
   a { text-decoration: none; }
+}
+
+/* Branding sourced from akims.edu.pk; photographs and fonts are local. */
+.sidebar { background: var(--brand-dark); border-top: 3px solid var(--brand-gold); }
+.brand-mark, .entry-brand img { object-fit: contain; width: 52px; height: 52px; flex-shrink: 0; }
+.sidebar-brand { gap: 10px; margin-inline: 4px; }
+.entry-art { width: 100%; margin: 28px 0; }
+.entry-art img { display: block; width: 100%; height: 240px; object-fit: cover; object-position: center 55%; border-radius: 12px; border-bottom: 3px solid var(--brand-gold); }
+.entry-art figcaption { margin-top: 9px; font-size: 12px; color: var(--muted); }
+.welcome-panel { background: #ecfdf5; }
+.welcome-panel .welcome-copy { max-width: 60%; }
+.welcome-panel .hero-art { right: 0; bottom: 0; width: 36%; height: 100%; max-height: none; object-fit: cover; object-position: center 66%; opacity: 1; border-left: 3px solid var(--brand-gold); }
+.institute-contact { display: grid; gap: 14px; }
+.institute-contact p { margin: 0; }
+.institute-contact a { overflow-wrap: anywhere; }
+.campus-photo { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+.entry-footer a { font-weight: 500; }
+@media (max-width: 480px) {
+  .entry-brand img { width: 48px; height: 48px; }
+  .entry-art img { height: 210px; }
+  .welcome-panel { display: flex; flex-direction: column; align-items: stretch; padding-bottom: 0; }
+  .welcome-panel .welcome-copy { max-width: 100%; }
+  .welcome-panel .hero-art { position: static; width: calc(100% + 44px); max-width: none; height: 140px; object-position: center 55%; margin: 24px -22px 0; border-left: 0; border-top: 3px solid var(--brand-gold); }
 }
