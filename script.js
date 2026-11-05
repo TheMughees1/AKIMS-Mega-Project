@@ -13,7 +13,8 @@
   const store = window.AKIMS.createStore();
   const actors = window.AKIMS.actors;
   let state = store.getState();
-  let actorId = safeRead('akims-demo-actor') || '';
+  let actorId = sessionRead() || safeRead('akims-demo-actor') || '';
+  if (actors[actorId]?.localAccount && sessionRead() !== actorId) actorId = '';
   if (!actors[actorId]) actorId = '';
   let page = safeRead('akims-demo-page') || 'dashboard';
   let selectedRequest = null;
@@ -120,7 +121,7 @@
     document.body.classList.remove('menu-open');
     if (!actorId) { renderRolePicker(); return; }
     if (!canNavigate(page)) page = 'dashboard';
-    safeWrite('akims-demo-actor', actorId); safeWrite('akims-demo-page', page);
+    safeWrite('akims-demo-actor', actors[actorId]?.localAccount ? '' : actorId); safeWrite('akims-demo-page', page);
     const nav = navigation[role()];
     const label = nav.find(n => n[0] === page)[1];
     app.innerHTML = `<div class="shell">
@@ -132,12 +133,13 @@
       </aside>
       <dialog id="navigation-dialog" class="navigation-dialog" aria-label="Workspace navigation"><button type="button" class="icon-btn drawer-close" data-action="close-menu" aria-label="Close navigation">${icon('close')}</button></dialog>
       <div class="workspace">
-        <header class="topbar"><div class="flex gap"><button class="icon-btn menu-toggle" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation-dialog">${icon('menu')}</button><div class="breadcrumb">${h(portalTitles[role()])}<span>/</span><strong>${h(label)}</strong></div></div><div class="topbar-actions"><button class="icon-btn" data-action="announcements" aria-label="Campus announcements">${icon('bell')}</button><span class="avatar" aria-hidden="true">${h(initials(actor().name))}</span><div class="user-meta"><strong>${h(actor().name)}</strong><span>${h(actor().title)}</span></div><button class="btn ghost small" data-action="switch-role">Switch demo role</button></div></header>
+        <header class="topbar"><div class="flex gap"><button class="icon-btn menu-toggle" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation-dialog">${icon('menu')}</button><div class="breadcrumb">${h(portalTitles[role()])}<span>/</span><strong>${h(label)}</strong></div></div><div class="topbar-actions"><button class="icon-btn" data-action="announcements" aria-label="Campus announcements">${icon('bell')}</button><span class="avatar" aria-hidden="true">${h(initials(actor().name))}</span><div class="user-meta"><strong>${h(actor().name)}</strong><span>${h(actor().title)}</span></div><button class="btn ghost small" data-action="switch-role">${actor()?.localAccount ? 'Sign out' : 'Switch demo role'}</button></div></header>
         <div class="demo-banner"><span class="pill">DEMO</span><span>Fictional records · changes stay in this browser · no real payments</span></div>
         <main id="main" class="content" tabindex="-1">${store.persistenceAvailable ? '' : `<div class="notice warning" role="alert">${h(store.persistenceWarning || 'Browser storage is unavailable. Changes will last only while this page is open.')}</div>`}${renderPage()}</main>
         <footer class="workspace-footer"><span>AKIMS Campus</span><span>Designed around your academic journey.</span><span>Demonstration edition</span></footer>
       </div></div>`;
     document.title = label + ' · AKIMS Campus Demo';
+    if(page === 'documents' && ['student','alumni'].includes(role())) refreshUploads();
     const menu = document.getElementById('navigation-dialog');
     menu.addEventListener('cancel', event => { event.preventDefault(); toggleMenu(false); });
     menu.addEventListener('click', event => {
@@ -146,18 +148,39 @@
     });
   }
 
+  let accessMode = 'signin';
+  let uploadFiles = [], uploadError = '', uploadLoading = false, uploadTicket = 0;
+  let previewURL;
+  function sessionRead() { try { return sessionStorage.getItem('akims-local-session') || ''; } catch (_) { return ''; } }
+  function setSession(value) { try { if(value) sessionStorage.setItem('akims-local-session', value); else sessionStorage.removeItem('akims-local-session'); } catch (_) {} }
+  function accessForm() {
+    const signup = accessMode === 'signup';
+    return `<div class="access-tabs" aria-label="Account access">${button('Sign in', 'access-signin', `aria-pressed="${!signup}"`)}${button('Create account', 'access-signup', `aria-pressed="${signup}"`)}</div><h2>${signup ? 'Your student account' : 'Welcome back'}</h2><p class="muted">${signup ? 'Create a local student profile to try clearance and document services.' : 'Continue to your clearance, documents and college records.'}</p><form data-form="${signup ? 'local-signup' : 'local-signin'}" class="access-form">${signup ? `<div class="form-grid">${field('Full name', 'name', 'text', '', 'required minlength="2" maxlength="120" autocomplete="name"')}${field('Registration number', 'roll', 'text', '', 'required minlength="3" maxlength="60" placeholder="DEMO-2026-001"')}</div>` : ''}${field('Email address', 'email', 'email', '', 'required maxlength="160" autocomplete="username"')}${signup ? `<div class="form-grid">${select('Program', 'program', option('Pharm-D','Pharm-D')+option('B-Category','B-Category'))}${field('Batch / session', 'batch', 'text', '', 'required minlength="2" maxlength="60" placeholder="2026–2031"')}</div>` : ''}<div class="password-field">${field('Demo password', 'password', 'password', '', `required minlength="10" maxlength="128" autocomplete="${signup ? 'new-password' : 'current-password'}" aria-describedby="password-help"`)}<button type="button" class="link-button" data-action="toggle-password" aria-pressed="false">Show password</button></div><p id="password-help" class="small muted">Use a made-up password, at least 10 characters. Do not reuse a real password.</p>${signup ? field('Confirm demo password', 'confirm', 'password', '', 'required minlength="10" maxlength="128" autocomplete="new-password"')+'<label class="consent"><input name="consent" type="checkbox" required> I am using fictional details and sample documents in this local demo.</label>' : '<button type="button" class="link-button" data-action="account-help">Trouble signing in?</button>'}<p class="form-error" role="alert"></p><button class="btn primary full-width" type="submit">${signup ? 'Create student account' : 'Sign in'}</button></form><p class="local-disclosure">Local demonstration. Accounts and files stay in this browser; they are not submitted to AKIMS.</p>`;
+  }
   function renderRolePicker() {
-    clearTimeout(toastTimer);
+    clearTimeout(toastTimer); safeWrite('akims-demo-actor', '');
     document.getElementById('toast').textContent = '';
     document.getElementById('toast').classList.remove('visible');
-    safeWrite('akims-demo-actor', '');
-    app.innerHTML = `<main id="main" class="role-picker" tabindex="-1">
-      <div class="entry-brand"><img class="brand-mark" src="assets/images/akims-logo.png" alt="AKIMS Bahawalpur logo"><div><strong>AKIMS Campus</strong><span>Akbar Institute of Medical Sciences · Bahawalpur</span></div><span class="portal-tag">Interactive demonstration</span></div>
-      <div class="entry-layout"><section class="entry-intro"><h1>Your college services,<br>in one place.</h1><p>Apply for lab and store clearance, review requests, and keep academic records up to date.</p><figure class="entry-art"><img src="assets/images/akims-campus.jpeg" alt="Akbar Institute of Medical Sciences building in Bahawalpur"><figcaption>Our campus · Bahawalpur</figcaption></figure><div class="notice"><strong>Explore a sample workspace</strong><p>Choose a role to try the complete clearance journey. These are fictional accounts, not a sign-in service. Changes are saved only in this browser.</p></div></section>
-      <section aria-label="Choose a demonstration role"><div class="section-title"><h2>Choose your workspace</h2><span class="small muted">Choose the work you need to do.</span></div><div class="role-grid">${['student', 'admin', 'staff', 'accounts', 'teacher', 'alumni'].map(id => `<button class="role-card" data-role="${id}" type="button"><span class="action-icon">${icon(roleIcons[id])}</span><h3>${portalTitles[id]}</h3><span class="role-person">${h(actors[id].name)} · sample account</span><p>${roleDescriptions[id]}</p><span class="action-arrow" aria-hidden="true">${icon('arrow')}</span></button>`).join('')}</div></section></div>
-      <footer class="entry-footer"><span>Made for the AKIMS academic community</span><span><a href="https://akims.edu.pk/" target="_blank" rel="noopener noreferrer">Visit the college website ↗</a></span></footer></main>`;
-    document.title = 'Choose your workspace · AKIMS Campus Demo';
+    app.innerHTML = `<main id="main" class="access-page" tabindex="-1"><header class="access-header"><a class="college-identity" href="https://akims.edu.pk/" target="_blank" rel="noopener noreferrer"><img src="assets/images/akims-logo.png" alt="AKIMS crest"><span><strong>Akbar Institute of<br>Medical Sciences</strong><small>Bahawalpur</small></span></a><a class="college-website" href="https://akims.edu.pk/" target="_blank" rel="noopener noreferrer">College website ${icon('arrow')}</a></header><div class="access-layout"><section class="campus-intro"><h1>A place to learn.<br>A space to move forward.</h1><p>Your student services, from the first request to your final clearance.</p><figure class="campus-cover"><img src="assets/images/akims-campus.jpeg" alt="Entrance to Akbar Institute of Medical Sciences Bahawalpur"><figcaption><span>Akbar Institute of Medical Sciences</span><span>University Road, Bahawalpur</span></figcaption></figure><div class="campus-contact-line"><span>Student services</span><a href="tel:0623086356">062-3086356</a><a href="mailto:aimsbahawalpur22@gmail.com">Contact the college</a></div></section><section class="access-desk" aria-label="Student account access">${accessForm()}</section></div><section class="campus-journal" aria-label="Life at AKIMS"><div><h2>Inside our campus</h2><p>Spaces, people and everyday learning at AKIMS.</p><a href="https://akims.edu.pk/institute-life.html" target="_blank" rel="noopener noreferrer">Explore college life</a></div>${campusPhotos()}</section><details class="demo-workspaces" open><summary>Explore demonstration workspaces <span>For trying the complete workflow</span></summary><div class="demo-role-list">${['student','admin','staff','accounts','teacher','alumni'].map(id=>`<button type="button" data-role="${id}">${icon(roleIcons[id])}<span>${portalTitles[id]}<small>Sample workspace</small></span>${icon('arrow')}</button>`).join('')}</div><p class="small muted">These role previews bypass sign-in for testing. They are not access controls for a live college system.</p></details><footer class="access-footer"><span>AKIMS Campus portal</span><span>Offline demonstration · Official college photography</span></footer></main>`;
+    document.title = 'Student access · AKIMS Campus';
   }
+  function campusPhotos() {
+    return [['akims-learning.jpg','Teaching laboratory'],['akims-laboratory.jpg','Anatomy laboratory'],['akims-community.jpg','Practical learning'],['akims-academic.jpg','Computer laboratory']].map(([src,caption])=>`<figure><img src="assets/images/${src}" alt="${caption}" loading="lazy"><figcaption>${caption}</figcaption></figure>`).join('');
+  }
+  function uploadDesk() {
+    if (uploadLoading) return '<p role="status">Opening your document folder…</p>';
+    if (uploadError) return `<div class="notice warning" role="alert">${h(uploadError)}</div>`;
+    return `<div class="document-desk"><div class="upload-intro"><h2>Personal documents</h2><p>Add sample student cards, academic records or receipts. Files stay in this browser and are not sent to the college.</p>${button(icon('upload')+' Add a document','upload-file','','primary')}<span class="small muted">PDF, JPG or PNG · 5 MB per file</span><span class="small muted">${uploadFiles.length} of 10 files · ${(uploadFiles.reduce((n,f)=>n+f.size,0)/1024/1024).toFixed(1)} of 25 MB</span></div><div>${uploadFiles.length ? `<ul class="file-list">${uploadFiles.map(f=>`<li><span class="file-symbol">${icon(f.type.startsWith('image/')?'image':'document')}</span><div><strong>${h(f.name)}</strong><span>${h(f.category)} · ${Math.max(1,Math.round(f.size/1024))} KB · ${date(f.createdAt)}</span><span class="small muted">Saved locally · not reviewed</span></div><div class="file-actions">${button(f.type.startsWith('image/')?'Preview':'Details','preview-file',`data-id="${h(f.id)}"`,'ghost small')}${button('Download','download-file',`data-id="${h(f.id)}"`,'ghost small')}${button('Remove','remove-file',`data-id="${h(f.id)}"`,'ghost small')}</div></li>`).join('')}</ul>` : '<div class="document-empty">'+icon('document')+'<h3>Your document folder is ready</h3><p>Add your first sample file. You can preview, download or remove it here.</p></div>'}</div></div>`;
+  }
+  async function refreshUploads() {
+    const ticket = ++uploadTicket, owner = actor()?.studentId;
+    uploadLoading = true; uploadError = ''; const host = document.getElementById('upload-desk'); if(host) host.innerHTML = uploadDesk();
+    let files = [], failure = '';
+    try { files = await AKIMSPortal.list(owner); } catch(error) { failure = error.message; }
+    if(ticket !== uploadTicket || actor()?.studentId !== owner) return;
+    uploadFiles = files; uploadError = failure; uploadLoading = false; const current = document.getElementById('upload-desk'); if(current) current.innerHTML = uploadDesk();
+  }
+  function ownedFile(id) {const file = uploadFiles.find(f=>f.id===id && f.owner===actor()?.studentId); if(!file) throw new Error('This document is not available in your workspace.'); return file;}
 
   function renderPage() {
     if (page === 'dashboard') return dashboard();
@@ -196,12 +219,8 @@
   }
   function studentDashboard() {
     const s = student(actor().studentId), r = latestOwnRequest();
-    const complete = r ? r.requirements.filter(x => x.status === 'cleared').length : 0;
-    const due = r && r.challan && r.challan.status !== 'verified' ? r.challan.amount : 0;
-    return heading('Student life, simplified', 'Hello, ' + s.name.split(' ')[0] + '.', 'Follow your department checks, review any dues, and collect your clearance documents.', button(icon('settings') + ' My profile', 'go', 'data-target="profile"')) +
-      `<div class="hero-grid"><section class="welcome-panel"><div class="welcome-copy"><h2>Lab and store<br>clearance.</h2><p>One application connects your laboratory checks, confirmed dues and final certificate.</p>${button('View my clearance ' + icon('arrow'), 'go', 'data-target="clearance"', 'primary')}</div><img class="hero-art" src="assets/images/akims-campus.jpeg" alt="AKIMS campus building"></section>${clearanceStatus(r)}</div>
-      <div class="stats-strip">${stat('Department checks', complete + ' / 3', 'Completed verifications')}${stat('Unpaid challan', money(due), due ? 'See your sample challan' : 'No issued unpaid challan')}${stat('Your documents', visibleRequests().reduce((n, q) => n + !!q.challan + !!q.certificate, 0), 'Challans and certificates')}</div>
-      <div class="two-column"><div>${panel('Your next step', r ? nextStep(r) : empty('Begin your clearance', 'Your profile is ready. Submit a sample application to get started.', button('Apply for clearance', 'new-request', '', 'primary')))}${panel('Campus notices', announcements(2))}</div><div>${panel('Student record', `<div class="detail-grid">${detail('Student', s.name)}${detail('Registration', s.roll)}${detail('Program', s.program)}${detail('Batch', s.batch)}</div>`)}${panel('Quick links', `<div class="action-list">${actionLink('My documents', 'Print your issued documents', 'document', 'documents')}${actionLink('Help with clearance', 'Understand the demonstration steps', 'help', 'help')}</div>`)}</div></div>`;
+    return heading('', 'Hello, ' + s.name.split(' ')[0] + '.', 'Your student services desk. Pick up where you left off.', button('My profile','go','data-target="profile"')) +
+      `<div class="student-hub"><section class="clearance-desk"><div class="desk-title"><span>${icon('clipboard')} Student clearance</span>${r ? badge(r.status) : '<span class="badge neutral">Not started</span>'}</div><h2>From application<br>to final clearance.</h2><p>Apply, follow your department checks and resolve any confirmed dues. Your next action is always shown here.</p><div class="desk-next">${r ? nextStep(r) : `<h3>Ready to begin?</h3><p>Check your student profile, then send your first request.</p>${button('Apply for clearance','new-request','','primary')}`}</div><div class="desk-foot">${icon('help')} Need assistance? Open Help &amp; demo guide.</div></section><div class="student-side">${clearanceStatus(r)}<section class="student-record"><span class="small muted">Your academic record${s.selfDeclared ? ' · self-declared' : ''}</span><h2>${h(s.name)}</h2><p>${h(s.roll)}</p><div>${detail('Program',s.program)}${detail('Batch',s.batch)}</div></section></div></div><div class="student-services"><button data-action="go" data-target="documents">${icon('document')}<span><strong>My documents</strong><small>Add sample files and collect issued documents</small></span>${icon('arrow')}</button><button data-action="go" data-target="clearance">${icon('clock')}<span><strong>Clearance history</strong><small>Follow applications, payments and decisions</small></span>${icon('arrow')}</button></div><div class="student-news"><section><h2>From the student desk</h2>${announcements(2)}</section><figure><img src="assets/images/akims-campus-life.jpeg" alt="Students attending a session at AKIMS" loading="lazy"><figcaption>Learning together at AKIMS, Bahawalpur.</figcaption></figure></div>`;
   }
   function actionLink(title, sub, ico, target) { return `<button class="action-item" data-page="${target}"><span class="action-icon">${icon(ico)}</span><span class="action-copy"><strong>${h(title)}</strong><small>${h(sub)}</small></span><span class="action-arrow">${icon('arrow')}</span></button>`; }
   function nextStep(r) {
@@ -300,7 +319,7 @@
     return `<div class="stack">${badge(c.status)}<strong class="amount">${money(c.amount)}</strong><span class="small mono">${h(c.number)}</span>${button('View / print challan', 'document', `data-id="${h(r.id)}" data-kind="challan"`)}${c.reviewNote ? `<div class="notice warning">${h(c.reviewNote)}</div>` : ''}${c.receipt ? `<div class="small"><strong>Sample receipt</strong><p>${h(c.receipt.name)}<br>Reference: ${h(c.receipt.reference)}</p><span class="muted">File details only; no receipt image is stored.</span></div>` : ''}${role() === 'student' && c.status === 'unpaid' ? button('Submit sample receipt', 'receipt', `data-id="${h(r.id)}"`, 'primary') : ''}${role() === 'accounts' && c.status === 'submitted' ? button('Review receipt', 'review-receipt', `data-id="${h(r.id)}"`, 'primary') : ''}</div>`;
   }
 
-  function documentsPage() { return heading('Your academic records', 'My documents', 'Issued sample documents remain available with their current validity status.') + panel('Document library', documentList()); }
+  function documentsPage() { return heading('Your academic records', 'My documents', 'Your personal files and issued clearance documents, in one place.') + '<section id="upload-desk">'+uploadDesk()+'</section>' + panel('Issued clearance documents', documentList()); }
   function documentList() {
     const rows = visibleRequests().slice().reverse().flatMap(r => ['challan', 'certificate'].filter(k => r[k]).map(kind => {
       const doc = r[kind], isCert = kind === 'certificate';
@@ -427,10 +446,10 @@
     dialog.innerHTML = `<div class="modal-header"><h2 id="dialog-title">${h(title)}</h2><button class="icon-btn" type="button" data-action="close-dialog" aria-label="Close dialog">${icon('close')}</button></div><div class="modal-body">${content}</div>${footer ? '<div class="modal-footer">' + footer + '</div>' : ''}`;
     if (!dialog.open) dialog.showModal();
   }
-  function closeDialog() { dialog.close(); if (dialogReturnFocus && dialogReturnFocus.isConnected) dialogReturnFocus.focus(); }
+  function closeDialog() { if(previewURL) {URL.revokeObjectURL(previewURL); previewURL = null;} dialog.close(); if (dialogReturnFocus && dialogReturnFocus.isConnected) dialogReturnFocus.focus(); }
   function showForm(title, name, body, submitLabel, attrs = '') {
     showDialog(title, `<form data-form="${name}" ${attrs}><div class="stack">${body}<p class="form-error" role="alert"></p><div class="form-actions">${button('Cancel', 'close-dialog')}<button type="submit" class="btn primary">${h(submitLabel)}</button></div></div></form>`);
-    if (['reset', 'revoke', 'finalize'].includes(name)) {
+    if (['reset', 'revoke', 'finalize', 'remove-file'].includes(name)) {
       dialog.setAttribute('role', 'alertdialog');
       const description = dialog.querySelector('.modal-body p');
       if (description) { description.id = 'dialog-description'; dialog.setAttribute('aria-describedby', description.id); }
@@ -470,7 +489,7 @@
     const fields = Array.from(form.querySelectorAll('input, select, textarea'));
     fields.forEach(clearFieldError);
     const message = node.textContent.toLowerCase();
-    const candidates = /reference/.test(message) ? ['reference'] : /amount|payment.*total/.test(message) ? ['receivedAmount', 'amount'] : /email/.test(message) ? ['email'] : /phone/.test(message) ? ['phone'] : /stock|quantity/.test(message) ? ['quantity'] : /purpose|reason for clearance/.test(message) ? ['purpose'] : /description/.test(message) ? ['description'] : /reason|note/.test(message) ? ['note', 'reason'] : /csv|file/.test(message) ? ['csv', 'receipt'] : [];
+    const candidates = /reference/.test(message) ? ['reference'] : /amount|payment.*total/.test(message) ? ['receivedAmount', 'amount'] : /confirm password/.test(message) ? ['confirm'] : /password/.test(message) ? ['password'] : /registration/.test(message) ? ['roll'] : /email/.test(message) ? ['email'] : /phone/.test(message) ? ['phone'] : /stock|quantity/.test(message) ? ['quantity'] : /purpose|reason for clearance/.test(message) ? ['purpose'] : /description/.test(message) ? ['description'] : /reason|note/.test(message) ? ['note', 'reason'] : /csv|file/.test(message) ? ['csv', 'receipt', 'document'] : [];
     const field = fields.find(field => candidates.includes(field.name));
     if (field) { field.setAttribute('aria-invalid', 'true'); field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), node.id].filter(Boolean).join(' ')); }
     node.setAttribute('tabindex', '-1');
@@ -516,7 +535,7 @@
   }
   function csvDownload(name, headers, rows) { download(name, '\uFEFF' + [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8'); }
 
-  document.addEventListener('click', function (event) {
+  document.addEventListener('click', async function (event) {
     const el = event.target.closest('button');
     if (!el) return;
     try {
@@ -530,11 +549,18 @@
       if (action === 'menu' || action === 'close-menu') { toggleMenu(action === 'menu'); return; }
       if (document.getElementById('navigation-dialog')?.open) toggleMenu(false);
       if (action === 'dismiss-error') { el.closest('.action-error').remove(); focusMain(); return; }
-      if (action === 'switch-role') { actorId = ''; selectedRequest = null; render(); focusMain(); window.scrollTo(0, 0); return; }
+      if (action === 'switch-role') { setSession(''); actorId = ''; accessMode = 'signin'; selectedRequest = null; render(); focusMain(); window.scrollTo(0, 0); return; }
       if (action === 'go') { navigate(el.dataset.target); return; }
+      if (action === 'access-signin' || action === 'access-signup') { accessMode = action === 'access-signup' ? 'signup' : 'signin'; renderRolePicker(); document.querySelector('.access-desk h2').setAttribute('tabindex','-1'); document.querySelector('.access-desk h2').focus(); return; }
+      if (action === 'toggle-password') {const input = document.querySelector('[name="password"]'); input.type = input.type === 'password' ? 'text' : 'password'; el.textContent = input.type === 'text' ? 'Hide password' : 'Show password'; el.setAttribute('aria-pressed',input.type === 'text'); return;}
+      if (action === 'account-help') {showDialog('Local account help', '<p>Use the email and demo password you created in this browser. Accounts do not sync between browsers or computers. Your sign-in email stays the same if you edit your profile contact email.</p><p>This offline edition cannot send reset emails. You can create another fictional account with a different registration and email, or use a sample workspace below.</p>'); return;}
       if (!actorId) return;
       const id = el.dataset.id;
-      if (action === 'new-request') showNewRequest(el.dataset.student);
+      if (action === 'upload-file') showForm('Add a sample document', 'upload-file', select('Document category','category',['Student card','Academic document','Payment receipt','Other document'].map(x=>option(x,x)).join(''))+'<div class="field"><label for="sample-document">Sample file</label><input id="sample-document" name="document" type="file" accept=".pdf,.jpg,.jpeg,.png" required aria-describedby="upload-help"><p id="upload-help" class="small muted">PDF, JPEG or PNG, up to 5 MB. Use sample files only. Saving a receipt here does not verify payment.</p></div>', 'Save to my documents');
+      else if (action === 'preview-file') {const f = ownedFile(id); if(previewURL) URL.revokeObjectURL(previewURL); previewURL = URL.createObjectURL(f.blob); showDialog(f.name, (f.type.startsWith('image/') ? `<img class="file-preview" src="${previewURL}" alt="Preview of ${h(f.name)}">` : '<p>Download this PDF to view it in your PDF reader.</p>')+`<p>${h(f.category)} · ${Math.ceil(f.size/1024)} KB · Saved ${date(f.createdAt)}</p>`,button('Download file','download-file',`data-id="${h(f.id)}"`));}
+      else if (action === 'download-file') {const f = ownedFile(id); download(f.name,f.blob,f.type);}
+      else if (action === 'remove-file') {const f = ownedFile(id); showForm('Remove this document?', 'remove-file', `<p>This permanently removes ${h(f.name)} from this browser. Download a copy first if needed.</p>`, 'Remove document', `data-id="${h(id)}"`);}
+      else if (action === 'new-request') showNewRequest(el.dataset.student);
       else if (action === 'open-request') {
         const r = getRequest(id); selectedRequest = r.id; page = role() === 'student' ? 'clearance' : 'requests'; render(); focusMain();
       }
@@ -565,7 +591,7 @@
       }
       else if (action === 'new-observation') showObservation(el.dataset.class);
       else if (action === 'announcements') showDialog('Campus announcements', announcements());
-      else if (action === 'reset') showForm('Reset this demonstration?', 'reset', '<p>This removes the changes made in this browser and restores the original fictional records. Download an export first if you want to inspect your current data later.</p>', 'Reset demo records');
+      else if (action === 'reset') showForm('Reset this demonstration?', 'reset', '<p>This removes all local accounts, uploaded files and workflow changes in this browser, and restores the original fictional records. Download an export first if you want to inspect your current data later.</p>', 'Reset demo records');
       else if (action === 'export-data') { if (role() !== 'admin') throw new Error('Full demo exports are available in Administration.'); download('AKIMS-demo-data.json', store.exportJSON(), 'application/json'); notice('Demo data exported. This file is for inspection; there is no backup restore screen.'); }
       else if (action === 'export-inventory') csvDownload('AKIMS-demo-inventory.csv', ['Item', 'Department', 'Category', 'Quantity', 'Unit', 'Reorder level'], visibleInventory().map(i => [i.name, department(i.departmentId).name, i.category, i.quantity, i.unit, i.reorderLevel]));
       else if (action === 'export-students' && role() === 'admin') csvDownload('AKIMS-demo-students.csv', ['roll', 'name', 'program', 'batch', 'email'], state.students.map(s => [s.roll, s.name, s.program, s.batch, s.email]));
@@ -593,9 +619,24 @@
     const values = Object.fromEntries(new FormData(form));
     const name = form.dataset.form, id = form.dataset.id;
     const submit = form.querySelector('button[type="submit"]');
-    if (submit) submit.disabled = true;
+    const submitLabel = submit?.textContent;
+    form.setAttribute('aria-busy', 'true');
+    if (submit) { submit.disabled = true; if(name.startsWith('local-') || name === 'upload-file') submit.textContent = 'Please wait…'; }
     try {
-      if (name === 'create-request') {
+      if (name === 'local-signup') {
+        if(values.password !== values.confirm) throw new Error('Confirm password must match your demo password.');
+        if(!values.consent) throw new Error('Confirm that you are using sample information.');
+        const credentials = await AKIMSPortal.credentials(values.password);
+        actorId = store.registerLocal({...values,...credentials}); setSession(actorId); page = 'dashboard'; render(); focusMain(); notice('Local student account created. Enrollment is not verified.');
+      }
+      else if(name === 'local-signin') {
+        const account = (store.getState().localAccounts || []).find(a=>a.email === values.email.trim().toLowerCase());
+        if(!account || await AKIMSPortal.verifier(values.password,account.salt) !== account.hash) throw new Error('Email or demo password is incorrect for this browser.');
+        actorId = account.id; setSession(actorId); page = 'dashboard'; render(); focusMain();
+      }
+      else if(name === 'upload-file') {if(!['student','alumni'].includes(role())) throw new Error('Choose your student workspace first.'); await AKIMSPortal.add(actor().studentId,values.category,values.document); closeDialog(); await refreshUploads(); notice('Document saved in this browser.');}
+      else if(name === 'remove-file') {const f = ownedFile(id); await AKIMSPortal.remove(actor().studentId,f.id); closeDialog(); await refreshUploads(); notice('Document removed.');}
+      else if (name === 'create-request') {
         const result = dispatch('createRequest', { studentId: role() === 'student' ? actor().studentId : values.studentId, purpose: values.purpose }, 'Clearance request submitted.');
         selectedRequest = result.requestId; page = role() === 'student' ? 'clearance' : 'requests'; render();
       }
@@ -617,7 +658,7 @@
       else if (name === 'stock') dispatch('stockMove', { itemId: id, direction: values.direction, quantity: values.quantity, reason: values.reason }, 'Stock movement recorded.');
       else if (name === 'observation') dispatch('saveObservation', { className: values.className, text: values.text }, 'Class observation saved.');
       else if (name === 'profile') dispatch('updateProfile', { email: values.email, phone: values.phone }, 'Your sample contact details were updated.');
-      else if (name === 'reset') { store.reset(); importDraft = null; selectedRequest = null; closeDialog(); render(); notice('Original fictional records restored.'); }
+      else if (name === 'reset') { await AKIMSPortal.clear(); const wasLocal = actor()?.localAccount; store.reset(); for(const key of Object.keys(actors)) if(actors[key].localAccount) delete actors[key]; setSession(''); if(wasLocal) actorId=''; importDraft = null; selectedRequest = null; closeDialog(); render(); notice('Original fictional records restored.'); }
       else if (name === 'import-file') {
         if (role() !== 'admin') throw new Error('Only Administration can import records.');
         const file = values.csv;
@@ -643,7 +684,7 @@
         importDraft.preview = { rows, errors }; render();
       }
     } catch (error) { formError(form, error); }
-    finally { if (submit && submit.isConnected) submit.disabled = false; }
+    finally { form.removeAttribute('aria-busy'); if (submit && submit.isConnected) { submit.disabled = false; submit.textContent = submitLabel; } }
   });
 
   document.addEventListener('input', function (event) {
@@ -655,6 +696,7 @@
     const counter = document.getElementById('search-count');
     if (counter) counter.textContent = search ? count + ' matching records' : '';
   });
+  dialog.addEventListener('close', () => { if(!dialog.open && previewURL) {URL.revokeObjectURL(previewURL); previewURL = null;} });
   dialog.addEventListener('click', function (event) { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) closeDialog(); } });
   function navigate(target) {
     if (!canNavigate(target)) throw new Error('This page is not part of your workspace.');

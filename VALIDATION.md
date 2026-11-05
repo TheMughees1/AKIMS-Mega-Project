@@ -30,3 +30,11 @@ See DESIGN.md for the three fetched skills, design rationale and scope boundarie
 - Additional entry and Help page axe scans passed the configured WCAG A/AA rules. Verified local logo/photo/font loading without HTTP errors, the public address, mobile width and the embedded logo in the standalone HTML document.
 - Reviewed entry, student desktop and mobile screenshots; adjusted photo positioning to keep the building sign in view. Original image files remain unchanged.
 - Branding sources and limits are recorded in BRANDING.md. The previous direct-file and screen-reader testing limits still apply.
+
+## Local accounts, uploads and design revision — 5 November 2026
+
+- 27 new browser checks passed: student registration, salted password verifier/no plaintext storage, student-only navigation, clearance submission, sign-out/sign-in, wrong password, duplicate email, two-student document separation, actual file bytes, reload persistence, preview, download, cancelled/confirmed deletion, disguised/oversized rejection, access layouts at 320/390/768/1440 px and axe checks on sign-in, sign-up and the document desk. No JavaScript errors occurred.
+- Additional storage checks passed: ten-file cap, wrong-owner deletion blocked, byte deletion on clear, and persistent feedback when IndexedDB is unavailable.
+- Existing 22 state/workflow scenarios, 46 browser assertions, 32 mobile role pages and 26 keyboard/error interaction checks passed. Reset checks wait for the new asynchronous file deletion before inspecting restored data.
+- Reviewed rendered access screens and student dashboard; corrected upload guidance contrast and moved mobile access controls ahead of the main photograph.
+- Browser-side owner checks demonstrate behavior; they are not security against someone controlling the browser. PDF/JPEG/PNG signature checks are not malware scanning. No production authentication, real admissions or remote upload delivery were tested. Original direct-file and screen-reader limitations still apply.

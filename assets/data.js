@@ -122,6 +122,29 @@
       persistenceWarning = (error && /Saved demo/.test(error.message) ? error.message + ' Original saved data was left untouched. ' : '') + 'Changes will stay in this tab only. Export a backup before closing it, or use Reset demo to try local storage again.';
     }
 
+    function syncAccounts() {
+      for (const account of state.localAccounts || []) {
+        const s = state.students.find(s => s.id === account.studentId);
+        if (s) { const a = {id: account.id, role: 'student', name: s.name, title: s.program, studentId: s.id, localAccount: true}; actors[a.id] = a; window.AKIMS.actors[a.id] = a; }
+      }
+    }
+    syncAccounts();
+    function registerLocal(p) {
+      if (!persistenceAvailable) fail('Enable browser storage before creating a local account.');
+      const email = text(p.email, 'Email', 5, 160).toLowerCase();
+      const roll = text(p.roll, 'Registration', 3, 60);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail('Enter a valid email address.');
+      if (state.students.some(s => s.email.toLowerCase() === email) || (state.localAccounts || []).some(a => a.email === email)) fail('This email is already registered. Sign in or use another demo email.');
+      if (state.students.some(s => s.roll.toLowerCase() === roll.toLowerCase())) fail('This registration number already exists. Use a different sample registration.');
+      if (!/^[a-f0-9]{64}$/.test(p.hash) || !/^[a-f0-9]{32}$/.test(p.salt)) fail('Local credentials could not be created.');
+      const next = clone(state), id = uid('LOCAL'), studentId = uid('S');
+      next.students.push({id: studentId, roll, name: text(p.name, 'Name', 2, 120), program: text(p.program, 'Program', 2, 160), batch: text(p.batch, 'Batch', 2, 60), email, phone: '', status: 'active', selfDeclared: true});
+      next.localAccounts = [...(next.localAccounts || []), {id, studentId, email, hash: p.hash, salt: p.salt}];
+      next.audit.push({id: uid('AUD'), actorId: id, actor: p.name, role: 'student', action: 'registerLocal', detail: 'Self-declared local demonstration account; enrollment not verified.', createdAt: new Date().toISOString()});
+      try { storage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch (_) { fail('Account could not be saved. Browser storage is full or unavailable.'); }
+      state = next; syncAccounts(); return id;
+    }
+
     function persist(next) {
       if (persistenceAvailable && storage) {
         try { storage.setItem(STORAGE_KEY, JSON.stringify(next)); }
@@ -355,13 +378,14 @@
     }
 
     return {
-      getState: () => clone(state), dispatch,
+      getState: () => clone(state), dispatch, registerLocal,
       reset: () => {
         try { storage = window.localStorage; storage.setItem(STORAGE_KEY, JSON.stringify(seed)); persistenceAvailable = true; persistenceWarning = ''; }
         catch (_) { persistenceAvailable = false; persistenceWarning = 'Browser storage is unavailable. This reset applies to the current tab only.'; }
+        for (const key of Object.keys(actors)) if (actors[key].localAccount) { delete actors[key]; delete window.AKIMS.actors[key]; }
         state = clone(seed); return clone(state);
       },
-      exportJSON: () => JSON.stringify(state, null, 2),
+      exportJSON: () => {const copy = clone(state); delete copy.localAccounts; return JSON.stringify(copy, null, 2);},
       get persistenceAvailable() { return persistenceAvailable; },
       get persistenceWarning() { return persistenceWarning; }
     };

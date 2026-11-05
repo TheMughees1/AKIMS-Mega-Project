@@ -24,3 +24,14 @@ Logo appears in the role chooser, sidebar, favicon, document preview and printed
 - `akims-logo.png`: `c8e447b9ad4de47d721054e6545601a40b677ede0e944e1621598f521601e435`
 - `akims-campus-life.jpeg`: `d935a492fedf87663657876188a7b34bb3d17e202459d960c5f89b8d5164a2e2`
 - `akims-campus.jpeg`: `16a33beb4d2938598159e6561f3cbc8e1e3c65f55dcd02c0ed15bcd46b817103`
+
+## Additional gallery sources — student access redesign
+
+Four unchanged original photographs were fetched and visually inspected:
+
+- https://akims.edu.pk/img1.jpg → akims-learning.jpg (teaching laboratory)
+- https://akims.edu.pk/img2.jpg → akims-laboratory.jpg (anatomy laboratory)
+- https://akims.edu.pk/img3.jpg → akims-community.jpg (practical learning room)
+- https://akims.edu.pk/img4.jpg → akims-academic.jpg (computer laboratory)
+
+The entry uses a captioned gallery; Student home uses the existing campus-session photograph. There are six college photographs plus the logo in the assets folder. These are source-site photographs, not generated images.

@@ -4,7 +4,9 @@ CHALANE KA TAREEQA
 1. ZIP par right-click karke Extract All karein.
 2. Extracted folder kholein.
 3. index.html par double-click karein.
-4. Chrome, Edge ya Firefox mein demo role choose karein.
+4. Create account se fictional student details aur naya demo password banayein.
+5. Sign in karein. My documents mein sample PDF/JPG/PNG add kar sakte hain.
+6. Sample Admin/Staff dekhne ke liye neeche Explore demonstration workspaces kholein.
 
 Bas! Node.js, npm, Ubuntu, database installation aur terminal commands ki
 zarurat nahin. ZIP ke andar se seedha file na kholein: pehle extract karein.
@@ -20,7 +22,8 @@ index.html       Page ka basic structure aur files ke links.
 style.css        Rang, fonts, spacing, mobile layout aur print design.
 script.js        Screens, buttons, forms, imports aur document previews.
 assets/data.js   Fictional sample data aur demo clearance workflow.
-assets/images/  Placeholder logo aur illustration.
+assets/portal.js Local sign-in aur document storage.
+assets/images/  Official college logo aur 6 campus photographs.
 assets/fonts/   Local fonts; download ke baad internet ki zarurat nahin.
 
 DEMO KA FLOW
@@ -38,8 +41,8 @@ YE DEMO HAI
 Saare students, policies, bank fields aur documents sample hain.
 Demo documents se payment na karein. Asli student data, passwords ya receipts
 is version mein na daalein. Role switching demonstration hai, secure login nahin.
-Receipt ki file contents save/upload nahin hoti; sirf sample file details save
-hoti hain. Sab roles ek hi browser ke demo data par kaam karte hain.
+Challan ke receipt-review form mein sirf sample file details save hoti hain.
+My documents mein add ki hui personal sample files ke actual contents save hote hain. Sab roles ek hi browser ke demo data par kaam karte hain.
 
 DATA KAHAN SAVE HOTA HAI?
 Browser storage available ho to data us browser mein save rehta hai.
@@ -47,7 +50,7 @@ Browser data clear karne, private mode, file ko move/rename karne, browser
 badalne ya Live Server address badalne se saved demo alag/gaib ho sakta hai.
 Storage blocked ho to portal warning dikhata hai aur changes tab mein rehte hain.
 Administration mein Export demo data se JSON copy le sakte hain; automatic restore included nahin.
-Reset demo fictional starting records wapas lata hai aur current demo changes
+Reset demo accounts, uploaded files aur current demo changes hata kar starting records wapas lata hai; yeh current data
 mita deta hai. Do computers ka data automatically share nahin hota.
 
 LIVE KARNA
@@ -62,3 +65,9 @@ Chrome/Edge mein index.html dubara kholein. Error ho to exact message bhejein.
 
 Existing Next.js version GitHub ki akims-mvp branch par alag available hai.
 Is simple folder ko chalane ke liye us version ki files ki zarurat nahin.
+
+PERSONAL DOCUMENTS
+My documents mein actual sample file browser mein save hoti hai: 5 MB per file,
+10 files / 25 MB per student. Image preview, download aur remove available hain.
+Payment receipt ke purane workflow mein ab bhi sirf sample file details save hoti hain.
+Sign-in aur files doosre computer par share nahin hoti. Real password/ID mat use karein.
