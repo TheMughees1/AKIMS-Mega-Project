@@ -4,6 +4,8 @@ A plain **HTML, CSS and JavaScript** demonstration of the AKIMS clearance portal
 
 **[Download this edition](https://github.com/TheMughees1/AKIMS-Mega-Project/archive/refs/heads/akims-simple.zip)** · [Roman Urdu instructions](START-HERE.txt)
 
+[Design direction and applied skills](DESIGN.md) · [Validation and known limits](VALIDATION.md)
+
 ## Open it
 
 1. Download the ZIP from the **akims-simple** branch.

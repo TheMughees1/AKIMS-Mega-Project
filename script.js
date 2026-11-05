@@ -80,7 +80,7 @@
   function icon(name, cls = '') { return `<svg class="${cls}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.document}</svg>`; }
   function button(label, action, attrs = '', type = 'secondary') { return `<button type="button" class="btn ${type}" data-action="${action}" ${attrs}>${label}</button>`; }
   function empty(title, description, action = '') { return `<div class="empty-state">${icon('clipboard')}<h3>${h(title)}</h3><p>${h(description)}</p>${action}</div>`; }
-  function heading(eyebrow, title, description, actions = '') { return `<div class="page-heading"><div><p class="eyebrow">${h(eyebrow)}</p><h1>${h(title)}</h1><p class="page-description">${h(description)}</p></div><div class="heading-actions">${actions}</div></div>`; }
+  function heading(eyebrow, title, description, actions = '') { return `<div class="page-heading"><div><h1>${h(title)}</h1><p class="page-description">${h(description)}</p></div><div class="heading-actions">${actions}</div></div>`; }
   function panel(title, body, extra = '') { return `<section class="panel"><div class="panel-header"><h2>${h(title)}</h2>${extra}</div><div class="panel-body">${body}</div></section>`; }
   function stat(label, value, hint) { return `<div class="stat"><span class="stat-label">${h(label)}</span><strong class="stat-value">${h(value)}</strong><span class="stat-hint">${h(hint)}</span></div>`; }
   function detail(label, value) { return `<div class="detail-item"><span class="muted small">${h(label)}</span><strong>${h(value)}</strong></div>`; }
@@ -115,6 +115,8 @@
 
   function render() {
     state = store.getState();
+    const previousMenu = document.getElementById('navigation-dialog');
+    if (previousMenu?.open) previousMenu.close();
     document.body.classList.remove('menu-open');
     if (!actorId) { renderRolePicker(); return; }
     if (!canNavigate(page)) page = 'dashboard';
@@ -126,16 +128,22 @@
         <div class="sidebar-brand"><img class="brand-mark" src="assets/images/akims-mark.svg" alt="AKIMS placeholder mark"><div><strong>AKIMS<span class="brand-dot">.</span></strong><span>Campus workspace</span></div></div>
         <p class="portal-label">${h(portalTitles[role()])}</p>
         <nav class="nav-list" aria-label="${h(portalTitles[role()])}">${nav.map(n => `<button type="button" class="nav-item ${page === n[0] ? 'active' : ''}" data-page="${n[0]}" ${page === n[0] ? 'aria-current="page"' : ''}>${icon(n[2])}<span>${n[1]}</span></button>`).join('')}</nav>
-        <div class="sidebar-footer"><div class="callout"><span class="eyebrow">A connected campus</span><p>One thoughtful step at a time.</p><span class="small muted">Akbar Institute of Medical Sciences</span></div>${role() === 'admin' ? '<button class="link-button" data-action="export-data">' + icon('download') + ' Export demo data</button>' : ''}<button class="link-button" data-action="reset">Reset demo</button><span class="small muted">Offline demonstration · v1.0</span></div>
+        <div class="sidebar-footer"><div class="callout"><span class="eyebrow">Need a hand?</span><p>Open Help &amp; demo guide for the clearance steps.</p><span class="small muted">Akbar Institute of Medical Sciences</span></div>${role() === 'admin' ? '<button class="link-button" data-action="export-data">' + icon('download') + ' Export demo data</button>' : ''}<button class="link-button" data-action="reset">Reset demo</button><span class="small muted">Offline demonstration · v1.0</span></div>
       </aside>
-      <button class="mobile-backdrop" aria-label="Close navigation" data-action="close-menu" hidden></button>
+      <dialog id="navigation-dialog" class="navigation-dialog" aria-label="Workspace navigation"><button type="button" class="icon-btn drawer-close" data-action="close-menu" aria-label="Close navigation">${icon('close')}</button></dialog>
       <div class="workspace">
-        <header class="topbar"><div class="flex gap"><button class="icon-btn menu-toggle" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar">${icon('menu')}</button><div class="breadcrumb">${h(portalTitles[role()])}<span>/</span><strong>${h(label)}</strong></div></div><div class="topbar-actions"><button class="icon-btn" data-action="announcements" aria-label="Campus announcements">${icon('bell')}</button><span class="avatar" aria-hidden="true">${h(initials(actor().name))}</span><div class="user-meta"><strong>${h(actor().name)}</strong><span>${h(actor().title)}</span></div><button class="btn ghost small" data-action="switch-role">Switch demo role</button></div></header>
+        <header class="topbar"><div class="flex gap"><button class="icon-btn menu-toggle" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="navigation-dialog">${icon('menu')}</button><div class="breadcrumb">${h(portalTitles[role()])}<span>/</span><strong>${h(label)}</strong></div></div><div class="topbar-actions"><button class="icon-btn" data-action="announcements" aria-label="Campus announcements">${icon('bell')}</button><span class="avatar" aria-hidden="true">${h(initials(actor().name))}</span><div class="user-meta"><strong>${h(actor().name)}</strong><span>${h(actor().title)}</span></div><button class="btn ghost small" data-action="switch-role">Switch demo role</button></div></header>
         <div class="demo-banner"><span class="pill">DEMO</span><span>Fictional records · changes stay in this browser · no real payments</span></div>
         <main id="main" class="content" tabindex="-1">${store.persistenceAvailable ? '' : `<div class="notice warning" role="alert">${h(store.persistenceWarning || 'Browser storage is unavailable. Changes will last only while this page is open.')}</div>`}${renderPage()}</main>
         <footer class="workspace-footer"><span>AKIMS Campus</span><span>Designed around your academic journey.</span><span>Demonstration edition</span></footer>
       </div></div>`;
     document.title = label + ' · AKIMS Campus Demo';
+    const menu = document.getElementById('navigation-dialog');
+    menu.addEventListener('cancel', event => { event.preventDefault(); toggleMenu(false); });
+    menu.addEventListener('click', event => {
+      const bounds = menu.getBoundingClientRect();
+      if (event.target === menu && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) toggleMenu(false);
+    });
   }
 
   function renderRolePicker() {
@@ -145,8 +153,8 @@
     safeWrite('akims-demo-actor', '');
     app.innerHTML = `<main id="main" class="role-picker" tabindex="-1">
       <div class="entry-brand"><img class="brand-mark" src="assets/images/akims-mark.svg" alt="AKIMS placeholder mark"><div><strong>AKIMS Campus</strong><span>Akbar Institute of Medical Sciences</span></div><span class="portal-tag">Interactive demonstration</span></div>
-      <div class="entry-layout"><section class="entry-intro"><p class="eyebrow">A more connected campus</p><h1>Your campus.<br>Your next chapter.</h1><p>A considered workspace for students, faculty and the people who keep the college moving.</p><div class="entry-art"><img src="assets/images/campus-line.svg" alt=""></div><div class="notice"><strong>Explore a sample workspace</strong><p>Choose a role to try the complete clearance journey. These are fictional accounts, not a sign-in service. Changes are saved only in this browser.</p></div></section>
-      <section aria-label="Choose a demonstration role"><div class="section-title"><h2>Choose your workspace</h2><span class="small muted">Six perspectives. One campus.</span></div><div class="role-grid">${['student', 'admin', 'staff', 'accounts', 'teacher', 'alumni'].map(id => `<button class="role-card" data-role="${id}" type="button"><span class="action-icon">${icon(roleIcons[id])}</span><h3>${portalTitles[id]}</h3><span class="role-person">${h(actors[id].name)} · sample account</span><p>${roleDescriptions[id]}</p><span class="action-arrow" aria-hidden="true">${icon('arrow')}</span></button>`).join('')}</div></section></div>
+      <div class="entry-layout"><section class="entry-intro"><h1>Your college services,<br>in one place.</h1><p>Apply for lab and store clearance, review requests, and keep academic records up to date.</p><div class="entry-art"><img src="assets/images/campus-line.svg" alt=""></div><div class="notice"><strong>Explore a sample workspace</strong><p>Choose a role to try the complete clearance journey. These are fictional accounts, not a sign-in service. Changes are saved only in this browser.</p></div></section>
+      <section aria-label="Choose a demonstration role"><div class="section-title"><h2>Choose your workspace</h2><span class="small muted">Choose the work you need to do.</span></div><div class="role-grid">${['student', 'admin', 'staff', 'accounts', 'teacher', 'alumni'].map(id => `<button class="role-card" data-role="${id}" type="button"><span class="action-icon">${icon(roleIcons[id])}</span><h3>${portalTitles[id]}</h3><span class="role-person">${h(actors[id].name)} · sample account</span><p>${roleDescriptions[id]}</p><span class="action-arrow" aria-hidden="true">${icon('arrow')}</span></button>`).join('')}</div></section></div>
       <footer class="entry-footer"><span>Made for the AKIMS academic community</span><span>Logo and artwork are placeholders · no internet required</span></footer></main>`;
     document.title = 'Choose your workspace · AKIMS Campus Demo';
   }
@@ -181,12 +189,17 @@
     return `<div class="timeline">${state.announcements.slice(0, limit).map(n => `<article class="timeline-item"><span class="eyebrow">${h(n.category)} · ${date(n.date)}</span><h3>${h(n.title)}</h3><p>${h(n.text)}</p></article>`).join('')}</div>`;
   }
   function latestOwnRequest() { return visibleRequests().slice().reverse()[0]; }
+  function clearanceStatus(request) {
+    const requirements = request ? request.requirements : state.departments.map(d => ({departmentId: d.id, status: 'pending'}));
+    const completed = requirements.filter(r => r.status === 'cleared').length;
+    return `<section class="status-panel clearance-status" aria-labelledby="clearance-status-title"><div class="status-heading"><h2 id="clearance-status-title">Department clearance</h2>${request ? badge(request.status) : '<span class="badge neutral">Not applied</span>'}</div><ul class="verification-list">${requirements.map(item => `<li><span class="verification-icon ${item.status === 'cleared' ? 'is-complete' : ''}">${icon(item.status === 'cleared' ? 'check' : 'clipboard')}</span><span>${h(department(item.departmentId).name)}</span>${request ? badge(item.status) : '<span class="small muted">Not started</span>'}</li>`).join('')}</ul><div class="verification-total"><strong>${completed} of ${requirements.length} cleared</strong><span class="small muted">Final authorization follows all checks.</span></div></section>`;
+  }
   function studentDashboard() {
     const s = student(actor().studentId), r = latestOwnRequest();
     const complete = r ? r.requirements.filter(x => x.status === 'cleared').length : 0;
     const due = r && r.challan && r.challan.status !== 'verified' ? r.challan.amount : 0;
-    return heading('Student life, simplified', 'Hello, ' + s.name.split(' ')[0] + '.', 'Your next steps and campus updates, together in one place.', button(icon('settings') + ' My profile', 'go', 'data-target="profile"')) +
-      `<div class="hero-grid"><section class="welcome-panel"><div class="welcome-copy"><span class="eyebrow">Your academic journey</span><h2>Clear the way<br>for what comes next.</h2><p>Apply once. Follow every department. Keep your documents close.</p>${button('View my clearance ' + icon('arrow'), 'go', 'data-target="clearance"', 'primary')}</div><img class="hero-art" src="assets/images/campus-line.svg" alt=""></section><section class="status-panel"><span class="eyebrow">At a glance</span><h2>${r ? h(statusName(r.status)) : 'Ready when you are.'}</h2><p>${r ? 'Your request is tracked across three demonstration departments.' : 'Start your clearance application when you are ready to try the workflow.'}</p><div class="progress-track">${['Apply', 'Review', 'Complete'].map((x, i) => `<div class="progress-node ${r && (i === 0 || r.status === 'cleared') ? 'done' : i === 0 ? 'current' : ''}"><span>${i + 1}</span><small>${x}</small></div>`).join('')}</div></section></div>
+    return heading('Student life, simplified', 'Hello, ' + s.name.split(' ')[0] + '.', 'Follow your department checks, review any dues, and collect your clearance documents.', button(icon('settings') + ' My profile', 'go', 'data-target="profile"')) +
+      `<div class="hero-grid"><section class="welcome-panel"><div class="welcome-copy"><h2>Lab and store<br>clearance.</h2><p>One application connects your laboratory checks, confirmed dues and final certificate.</p>${button('View my clearance ' + icon('arrow'), 'go', 'data-target="clearance"', 'primary')}</div><img class="hero-art" src="assets/images/campus-line.svg" alt=""></section>${clearanceStatus(r)}</div>
       <div class="stats-strip">${stat('Department checks', complete + ' / 3', 'Completed verifications')}${stat('Unpaid challan', money(due), due ? 'See your sample challan' : 'No issued unpaid challan')}${stat('Your documents', visibleRequests().reduce((n, q) => n + !!q.challan + !!q.certificate, 0), 'Challans and certificates')}</div>
       <div class="two-column"><div>${panel('Your next step', r ? nextStep(r) : empty('Begin your clearance', 'Your profile is ready. Submit a sample application to get started.', button('Apply for clearance', 'new-request', '', 'primary')))}${panel('Campus notices', announcements(2))}</div><div>${panel('Student record', `<div class="detail-grid">${detail('Student', s.name)}${detail('Registration', s.roll)}${detail('Program', s.program)}${detail('Batch', s.batch)}</div>`)}${panel('Quick links', `<div class="action-list">${actionLink('My documents', 'Print your issued documents', 'document', 'documents')}${actionLink('Help with clearance', 'Understand the demonstration steps', 'help', 'help')}</div>`)}</div></div>`;
   }
@@ -200,7 +213,7 @@
     const active = state.requests.filter(r => !isClosed(r));
     const ready = active.filter(r => r.status === 'ready');
     const openIssues = state.requests.flatMap(r => r.issues).filter(i => ['open', 'charged'].includes(i.resolution));
-    return heading('Administration', 'A clear view of campus.', 'Coordinate the work that moves every student forward.', button(icon('plus') + ' Start a request', 'new-request', '', 'primary')) +
+    return heading('Administration', 'Clearance and campus records', 'Coordinate the work that moves every student forward.', button(icon('plus') + ' Start a request', 'new-request', '', 'primary')) +
       `<div class="stats-strip">${stat('Active clearances', active.length, 'Across all demo departments')}${stat('Ready for authorization', ready.length, 'Mandatory checks complete')}${stat('Outstanding issues', openIssues.length, 'Investigations and confirmed dues')}${stat('Student records', state.students.length, 'Fictional demonstration records')}</div>
       <div class="two-column"><div>${panel('Clearance desk', requestTable(active.slice().reverse()), button('View all', 'go', 'data-target="requests"', 'ghost small'))}${panel('Department progress', departmentSummary())}</div><div>${panel('Today’s priorities', `<div class="action-list">${actionLink('Review applications', active.length + ' active requests', 'clipboard', 'requests')}${actionLink('Resolve department issues', openIssues.length + ' outstanding items', 'issue', 'issues')}${actionLink('Import student records', 'Map, validate and preview a CSV', 'upload', 'import')}</div>`)}${panel('Recent activity', activityList(5))}</div></div>`;
   }
@@ -223,21 +236,21 @@
     const paid = state.requests.filter(r => r.challan && r.challan.status === 'verified');
     const pending = state.requests.filter(r => r.challan && r.challan.status === 'submitted');
     const due = state.requests.filter(r => r.challan && r.challan.status !== 'verified');
-    return heading('Accounts desk', 'Every payment, accounted for.', 'Review sample references independently before settling a challan.', button('Review receipts', 'go', 'data-target="payments"', 'primary')) +
+    return heading('Accounts desk', 'Payment review', 'Review sample references independently before settling a challan.', button('Review receipts', 'go', 'data-target="payments"', 'primary')) +
       `<div class="stats-strip">${stat('Receipts to review', pending.length, 'Awaiting your verification')}${stat('Verified collections', money(paid.reduce((n, r) => n + r.challan.amount, 0)), 'Demonstration totals')}${stat('Unsettled challans', due.length, 'Unpaid or awaiting review')}</div><div class="two-column"><div>${panel('Payment review queue', paymentTable(pending))}</div><div>${panel('A deliberate check', '<div class="stack"><span class="action-icon">' + icon('wallet') + '</span><h3>Receipt submission is one step.</h3><p>In a live system, Accounts checks the actual bank record. Here, enter the sample reference and full amount to simulate that independent check.</p><div class="notice warning">This demo does not connect to a bank or process money. Never make a payment using a sample challan.</div></div>')}</div></div>`;
   }
   function teacherDashboard() {
-    return heading('Faculty workspace', 'Good teaching starts with insight.', 'A space for class-level observations, shared progress and thoughtful follow-up.', button(icon('plus') + ' Add class observation', 'new-observation', '', 'primary')) +
+    return heading('Faculty workspace', 'Your classes and observations', 'A space for class-level observations, shared progress and thoughtful follow-up.', button(icon('plus') + ' Add class observation', 'new-observation', '', 'primary')) +
       `<div class="two-column"><div>${panel('Your teaching assignments', classCards())}${panel('Recent class observations', observationList(3))}</div><div>${panel('Collective, constructive feedback', '<span class="eyebrow">Academic practice</span><h3>See the class as a whole.</h3><p>Record shared learning needs, laboratory readiness and suggestions for your assigned classes. Avoid individual student evaluations or sensitive personal details.</p>')}${panel('Surveys, thoughtfully introduced', '<p>Anonymous student surveys are planned for a later release, after the college approves response thresholds, confidentiality and access rules.</p><span class="badge neutral">Planned · not active</span>')}</div></div>`;
   }
   function alumniDashboard() {
     const s = student(actor().studentId);
-    return heading('The AKIMS alumni community', 'A familiar place. A new chapter.', 'Keep your connection to campus and your academic documents close.', button('Update my details', 'go', 'data-target="profile"', 'primary')) +
+    return heading('The AKIMS alumni community', 'Your alumni records', 'Keep your connection to campus and your academic documents close.', button('Update my details', 'go', 'data-target="profile"', 'primary')) +
       `<section class="welcome-panel"><div class="welcome-copy"><span class="eyebrow">Welcome back, ${h(s.name.split(' ')[0])}</span><h2>Your journey continues.</h2><p>${h(s.program)} · Class of ${h(s.batch.split('–').pop())}</p>${button('Open my documents ' + icon('arrow'), 'go', 'data-target="documents"', 'primary')}</div><img class="hero-art" src="assets/images/campus-line.svg" alt=""></section><div class="two-column"><div>${panel('Your document history', documentList())}</div><div>${panel('Stay connected', '<p>Your own contact details can be updated in this demonstration. A public alumni directory and messaging service are not enabled.</p>')}${panel('Campus notices', announcements(1))}</div></div>`;
   }
 
   function requestTable(requests) {
-    if (!requests.length) return empty('A clear desk', 'No clearance requests match this view.');
+    if (!requests.length) return empty('No clearance applications', 'Applications appear here after a student or authorized staff member submits one.', ['admin', 'staff'].includes(role()) ? button('Start a request', 'new-request', '', 'primary') : '');
     return `<div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Student / request</th><th scope="col">Progress</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>${requests.map(r => {
       const s = student(r.studentId);
       return `<tr data-search="${h((s.name + ' ' + s.roll + ' ' + r.id + ' ' + statusName(r.status)).toLowerCase())}"><td><strong>${h(s.name)}</strong><span class="table-secondary">${h(r.id)} · ${date(r.createdAt)}</span></td><td>${r.requirements.filter(d => d.status === 'cleared').length} / ${r.requirements.length} departments</td><td>${badge(r.status)}</td><td>${button('Open ' + icon('arrow'), 'open-request', `data-id="${h(r.id)}" aria-label="Open clearance for ${h(s.name)}"`, 'ghost small')}</td></tr>`;
@@ -328,7 +341,7 @@
   }
   function paymentsPage() { return heading('Accounts verification', 'Payment verification', 'Compare the sample reference and amount before settling a confirmed obligation.') + panel('Challans & receipts', paymentTable(state.requests.filter(r => r.challan).slice().reverse())); }
   function classCards() {
-    return `<div class="class-list">${actor().classes.map((name, n) => `<article class="class-card"><span class="eyebrow">Assigned class 0${n + 1}</span><h3>${h(name)}</h3><p>Medical Laboratory Technology</p><div class="flex gap"><span class="badge info">${state.observations.filter(o => o.className === name).length} observations</span>${button('Add observation', 'new-observation', `data-class="${h(name)}"`, 'secondary small')}</div></article>`).join('')}</div>`;
+    return `<div class="class-list">${actor().classes.map((name, n) => `<article class="class-card"><h3>${h(name)}</h3><p>Medical Laboratory Technology</p><div class="flex gap"><span class="badge info">${state.observations.filter(o => o.className === name).length} observations</span>${button('Add observation', 'new-observation', `data-class="${h(name)}"`, 'secondary small')}</div></article>`).join('')}</div>`;
   }
   function classesPage() { return heading('Teaching assignments', 'My classes', 'Class-level learning needs and collective academic progress.') + panel('Assigned classes', classCards()); }
   function observationList(limit) {
@@ -405,6 +418,8 @@
   // Dialogs use the browser's focus-trapping dialog element and labelled controls.
   function showDialog(title, content, footer = '', wide = false) {
     dialogReturnFocus = document.activeElement;
+    dialog.setAttribute('role', 'dialog');
+    dialog.removeAttribute('aria-describedby');
     dialog.classList.toggle('wide', wide);
     dialog.innerHTML = `<div class="modal-header"><h2 id="dialog-title">${h(title)}</h2><button class="icon-btn" type="button" data-action="close-dialog" aria-label="Close dialog">${icon('close')}</button></div><div class="modal-body">${content}</div>${footer ? '<div class="modal-footer">' + footer + '</div>' : ''}`;
     if (!dialog.open) dialog.showModal();
@@ -412,6 +427,18 @@
   function closeDialog() { dialog.close(); if (dialogReturnFocus && dialogReturnFocus.isConnected) dialogReturnFocus.focus(); }
   function showForm(title, name, body, submitLabel, attrs = '') {
     showDialog(title, `<form data-form="${name}" ${attrs}><div class="stack">${body}<p class="form-error" role="alert"></p><div class="form-actions">${button('Cancel', 'close-dialog')}<button type="submit" class="btn primary">${h(submitLabel)}</button></div></div></form>`);
+    if (['reset', 'revoke', 'finalize'].includes(name)) {
+      dialog.setAttribute('role', 'alertdialog');
+      const description = dialog.querySelector('.modal-body p');
+      if (description) { description.id = 'dialog-description'; dialog.setAttribute('aria-describedby', description.id); }
+      dialog.querySelector('.form-actions [data-action="close-dialog"]').focus();
+    }
+  }
+  function showActionError(message) {
+    document.querySelector('.action-error')?.remove();
+    const main = document.getElementById('main');
+    main.insertAdjacentHTML('afterbegin', `<div class="notice warning action-error" role="alert" tabindex="-1"><strong>Action needs attention</strong><p>${h(message)}</p>${button('Dismiss message', 'dismiss-error', '', 'secondary small')}</div>`);
+    main.querySelector('.action-error').focus();
   }
   function notice(message) {
     const toast = document.getElementById('toast'); clearTimeout(toastTimer);
@@ -425,11 +452,26 @@
     render(); focusMain(); notice(success || 'Saved to this demonstration.');
     return result;
   }
+  function clearFieldError(field) {
+    field.removeAttribute('aria-invalid');
+    const descriptions = (field.getAttribute('aria-describedby') || '').split(' ').filter(id => id && !id.startsWith('error-'));
+    if (descriptions.length) field.setAttribute('aria-describedby', descriptions.join(' '));
+    else field.removeAttribute('aria-describedby');
+  }
   function formError(form, error) {
     let node = form.querySelector('.form-error');
     if (!node) { node = document.createElement('p'); node.className = 'form-error'; node.setAttribute('role', 'alert'); form.appendChild(node); }
     node.textContent = error.message || String(error);
-    node.setAttribute('tabindex', '-1'); node.focus();
+    node.id = 'error-' + (form.dataset.form || 'action');
+    form.setAttribute('aria-describedby', node.id);
+    const fields = Array.from(form.querySelectorAll('input, select, textarea'));
+    fields.forEach(clearFieldError);
+    const message = node.textContent.toLowerCase();
+    const candidates = /reference/.test(message) ? ['reference'] : /amount|payment.*total/.test(message) ? ['receivedAmount', 'amount'] : /email/.test(message) ? ['email'] : /phone/.test(message) ? ['phone'] : /stock|quantity/.test(message) ? ['quantity'] : /purpose|reason for clearance/.test(message) ? ['purpose'] : /description/.test(message) ? ['description'] : /reason|note/.test(message) ? ['note', 'reason'] : /csv|file/.test(message) ? ['csv', 'receipt'] : [];
+    const field = fields.find(field => candidates.includes(field.name));
+    if (field) { field.setAttribute('aria-invalid', 'true'); field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), node.id].filter(Boolean).join(' ')); }
+    node.setAttribute('tabindex', '-1');
+    (field || node).focus();
   }
 
   function showNewRequest(studentId) {
@@ -441,7 +483,7 @@
     showForm('Record a department issue', 'add-issue', `<div class="notice">${h(department(departmentId).name)} · ${h(student(r.studentId).name)}</div>${textarea('Issue description', 'description', '', 'required minlength="5" maxlength="500"')}${field('Confirmed charge (PKR)', 'amount', 'number', '0', 'required min="0" max="10000000" step="0.01"')}<p class="small muted">Enter 0 for an unresolved investigation. A positive amount represents a documented, confirmed charge in this demonstration.</p>`, 'Record issue', `data-id="${h(r.id)}" data-dept="${departmentId}"`);
   }
   function showReceipt(r) {
-    showForm('Submit a sample receipt', 'receipt', `<div class="notice warning">Demonstration only. Choose a sample file. Only its name, type and size are recorded; file contents are not uploaded or saved.</div><p>Challan amount: <strong>${money(r.challan.amount)}</strong></p><div class="field"><label for="receipt-file">Sample receipt file</label><input id="receipt-file" name="receipt" type="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></div>${field('Sample bank reference', 'reference', 'text', '', 'required minlength="3" maxlength="100" placeholder="For example: DEMO-PAID-001"')}<p class="small muted">PDF, PNG or JPEG · up to 5 MB. Uploading a sample does not settle the challan.</p>`, 'Submit for Accounts review', `data-id="${h(r.id)}"`);
+    showForm('Submit a sample receipt', 'receipt', `<div class="notice warning">Demonstration only. Choose a sample file. Only its name, type and size are recorded; file contents are not uploaded or saved.</div><p>Challan amount: <strong>${money(r.challan.amount)}</strong></p><div class="field"><label for="receipt-file">Sample receipt file</label><input id="receipt-file" name="receipt" type="file" aria-describedby="receipt-help" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required></div>${field('Sample bank reference', 'reference', 'text', '', 'required minlength="3" maxlength="100" placeholder="For example: DEMO-PAID-001"')}<p class="small muted" id="receipt-help">PDF, PNG or JPEG · up to 5 MB. Uploading a sample does not settle the challan.</p>`, 'Submit for Accounts review', `data-id="${h(r.id)}"`);
   }
   function showReceiptReview(r) {
     const c = r.challan;
@@ -483,6 +525,8 @@
       if (!action) return;
       if (action === 'close-dialog') { closeDialog(); return; }
       if (action === 'menu' || action === 'close-menu') { toggleMenu(action === 'menu'); return; }
+      if (document.getElementById('navigation-dialog')?.open) toggleMenu(false);
+      if (action === 'dismiss-error') { el.closest('.action-error').remove(); focusMain(); return; }
       if (action === 'switch-role') { actorId = ''; selectedRequest = null; render(); focusMain(); window.scrollTo(0, 0); return; }
       if (action === 'go') { navigate(el.dataset.target); return; }
       if (!actorId) return;
@@ -535,7 +579,7 @@
       }
     } catch (error) {
       if (dialog.open) formError(dialog.querySelector('form') || dialog.querySelector('.modal-body'), error);
-      else notice(error.message || 'The action could not be completed.');
+      else showActionError(error.message || 'The action could not be completed.');
     }
   });
 
@@ -600,6 +644,7 @@
   });
 
   document.addEventListener('input', function (event) {
+    if (event.target.matches('[aria-invalid="true"]')) clearFieldError(event.target);
     if (!event.target.matches('[data-table-search]')) return;
     const search = event.target.value.trim().toLowerCase();
     let count = 0;
@@ -614,10 +659,27 @@
   }
   function focusMain() { const main = document.getElementById('main'); if (main) main.focus({ preventScroll: true }); }
   function toggleMenu(open) {
-    const sidebar = document.getElementById('sidebar'), backdrop = document.querySelector('.mobile-backdrop'), toggle = document.querySelector('.menu-toggle');
-    sidebar.classList.toggle('open', open); backdrop.hidden = !open; document.body.classList.toggle('menu-open', open); toggle.setAttribute('aria-expanded', String(open));
-    if (open) sidebar.querySelector('button')?.focus(); else toggle.focus();
+    const sidebar = document.getElementById('sidebar');
+    const menu = document.getElementById('navigation-dialog');
+    const toggle = document.querySelector('.menu-toggle');
+    if (!sidebar || !menu || !toggle) return;
+    if (open) {
+      menu.append(sidebar);
+      sidebar.classList.add('open');
+      document.body.classList.add('menu-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      menu.showModal();
+    } else {
+      menu.close();
+      menu.before(sidebar);
+      sidebar.classList.remove('open');
+      document.body.classList.remove('menu-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.focus({preventScroll: true});
+    }
   }
-  document.addEventListener('keydown', event => { if (event.key === 'Escape' && document.getElementById('sidebar')?.classList.contains('open')) toggleMenu(false); });
+  window.matchMedia('(min-width: 761px)').addEventListener('change', event => {
+    if (event.matches && document.getElementById('navigation-dialog')?.open) toggleMenu(false);
+  });
   render();
 })();
