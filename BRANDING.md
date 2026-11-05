@@ -35,3 +35,7 @@ Four unchanged original photographs were fetched and visually inspected:
 - https://akims.edu.pk/img4.jpg → akims-academic.jpg (computer laboratory)
 
 The entry uses a captioned gallery; Student home uses the existing campus-session photograph. There are six college photographs plus the logo in the assets folder. These are source-site photographs, not generated images.
+
+## User-requested typography update
+
+The later modern/kinetic design request replaces website-derived Playfair Display with locally bundled Barlow Condensed 700/800 (SIL Open Font License), paired with the existing Inter UI font. The college logo, emerald/gold colors and photographs are retained. This is a portal-specific design direction, not a claim that the public college website uses Barlow Condensed. See MODERN-DESIGN.md.

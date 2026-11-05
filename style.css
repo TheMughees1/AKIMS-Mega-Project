@@ -27,21 +27,16 @@
   font-display: swap;
   src: url(assets/fonts/inter-700.ttf) format('truetype');
 }
-@font-face {
-  font-family: 'Playfair Display';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url(assets/fonts/playfair-display-400.ttf) format('truetype');
-}
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 700; font-display: swap; src: url("assets/fonts/barlow-condensed-700.woff2") format("woff2"); }
+@font-face { font-family: "Barlow Condensed"; font-style: normal; font-weight: 800; font-display: swap; src: url("assets/fonts/barlow-condensed-800.woff2") format("woff2"); }
 
 :root {
   color-scheme: light;
-  --bg: #f7f8f5;
+  --bg: #f3f6f3;
   --surface: #fff;
   --ink: #022c22;
   --text: #354940;
-  --muted: #68756c;
+  --muted: #4c6156;
   --green: #064e3b;
   --brand-dark: #022c22;
   --brand-gold: #d4af37;
@@ -58,7 +53,7 @@
   --layer-accessibility: 50;
   --shadow: 0 8px 32px rgb(28 52 40 / 5%);
   --body-font: "Inter", "Segoe UI", Arial, sans-serif;
-  --title-font: "Playfair Display", Georgia, serif;
+  --title-font: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: auto; }
@@ -627,4 +622,127 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   .campus-intro > p { margin: 0; }
   .access-desk { order: 1; width: 100%; }
   .campus-cover { order: 2; width: 100%; }
+}
+
+/* Modern Web Design skill: bold type, stable controls, finite kinetic feedback. */
+:root {
+  --display-weight: 800;
+  --motion-fast: 160ms;
+  --motion-intro: 420ms;
+  --radius: 10px;
+}
+h1 { font-weight: 700; }
+h2, h3 { font-weight: 700; }
+.page-heading h1 { font-size: clamp(40px, 4vw, 58px); line-height: 1.04; }
+.page-heading { align-items: center; margin-bottom: 32px; }
+.btn { min-height: 44px; border-radius: 7px; }
+.icon-btn { width: 44px; height: 44px; }
+.access-page { max-width: 1500px; padding-inline: clamp(24px,4vw,64px); }
+.access-header { padding-block: 25px; }
+.college-identity strong { font-weight: 700; }
+.access-layout { grid-template-columns: minmax(0,1.2fr) minmax(360px,.88fr); gap: clamp(36px,5vw,76px); padding: 38px 0 48px; }
+.campus-intro { background: var(--green); color: white; border-radius: 12px; padding: 32px 32px 0; overflow: hidden; }
+.campus-intro h1.kinetic-title { color: white; font-family: var(--title-font); font-size: clamp(68px,6.6vw,102px); font-weight: var(--display-weight); line-height: .95; text-wrap: initial; margin: 0 0 24px; }
+.kinetic-line { display: block; overflow: hidden; padding-block: .04em; }
+.kinetic-line > span { display: inline-block; white-space: nowrap; }
+.campus-intro > p { max-width: 430px; font-size: 14px; color: #e0eee6; margin: 0; line-height: 1.7; }
+.campus-cover { margin: 27px -32px 0; background: var(--brand-dark); }
+.campus-cover > img { height: 215px; object-position: center 55%; }
+.campus-cover figcaption { background: var(--brand-dark); border-top: 3px solid var(--brand-gold); padding: 14px 22px; }
+.campus-contact-line { font-size: 11px; margin: 0; padding: 17px 0; gap: 10px; }
+.campus-contact-line span, .campus-contact-line a { color: #e0eee6; }
+.access-desk { padding: 30px 34px; border-radius: 12px; border-top: 4px solid var(--green); }
+.access-desk h2 { font-family: var(--title-font); font-weight: 700; font-size: 40px; line-height: 1.1; }
+.access-tabs { gap: 28px; }
+.access-tabs .btn { min-height: 44px; font-size: 14px; }
+.access-form { gap: 12px; margin-top: 22px; }
+.access-form input, .access-form select { background: #f8faf8; min-height: 46px; border-radius: 6px; }
+.access-form .field { margin: 0; }
+.access-form > .btn.primary { min-height: 48px; font-size: 14px; }
+.password-field .link-button { min-height: 44px; margin-block: 0; }
+.access-form > .link-button { min-height: 44px; }
+.local-disclosure { font-size: 12px !important; }
+.campus-journal { gap: 22px; padding-block: 34px 44px; }
+.campus-journal h2 { font-family: var(--title-font); font-size: 32px; line-height: 1.1; margin-bottom: 12px; }
+.campus-journal img { height: 150px; border-radius: 6px; }
+.campus-journal figcaption { font-size: 12px; color: var(--ink); }
+.demo-workspaces summary { min-height: 44px; }
+.demo-role-list button { padding-block: 22px; }
+.demo-role-list button > span { font-weight: 600; }
+.demo-role-list small { font-weight: 400; }
+.sidebar { border-top-width: 4px; }
+.sidebar-brand strong { font-family: var(--title-font); font-weight: 800; font-size: 30px; }
+.nav-item { min-height: 46px; border-radius: 6px; }
+.nav-item.active { background: #d1fae5; box-shadow: inset 3px 0 var(--brand-gold); }
+.clearance-desk { border-radius: 10px; border-top: 4px solid var(--green); }
+.clearance-desk > h2 { font: 800 clamp(36px,3.5vw,52px)/1.02 var(--title-font); }
+.desk-title { margin-bottom: 28px; }
+.student-record h2 { font-family: var(--title-font); font-size: 30px; }
+.student-services strong { font-size: 16px; }
+.student-services button { min-height: 96px; }
+.student-news h2 { font-family: var(--title-font); font-size: 30px; }
+.stat-value, .stat > strong, .stat > .value { font-family: var(--title-font); font-weight: 700; font-size: 38px; }
+.welcome-copy h2 { font-family: var(--title-font); font-weight: 700; font-size: 38px; }
+.document-preview h2 { font-family: var(--body-font); font-weight: 700; }
+.modal-header h2 { font-family: var(--title-font); font-size: 30px; }
+.upload-intro h2 { font-family: var(--title-font); font-size: 30px; line-height: 1.1; }
+.file-actions .btn { min-height: 44px; }
+@keyframes akims-type-enter {
+  from { transform: translate3d(0, 108%, 0) rotate(2deg); opacity: .25; }
+  to { transform: translate3d(0, 0, 0) rotate(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .has-intro-motion .kinetic-line > span { animation: akims-type-enter var(--motion-intro) ease-out both; }
+  .has-intro-motion .kinetic-line:nth-child(2) > span { animation-delay: 80ms; }
+  .has-intro-motion .kinetic-line:nth-child(3) > span { animation-delay: 160ms; }
+  .btn, .student-services button > svg:last-child, .demo-role-list button > svg:last-child, .college-website svg { transition: transform var(--motion-fast) ease-out; }
+  .btn:not(:disabled):active { transform: translateY(1px) scale(.985); }
+  .student-services button:is(:hover,:focus-visible) > svg:last-child, .demo-role-list button:is(:hover,:focus-visible) > svg:last-child, .college-website:is(:hover,:focus-visible) svg { transform: translateX(4px); }
+}
+@media(max-width:1100px) {
+  .access-layout { gap: 30px; }
+  .campus-intro { padding: 26px 26px 0; }
+  .campus-intro h1.kinetic-title { font-size: clamp(62px,7vw,80px); }
+  .campus-cover { margin-inline: -26px; }
+  .access-desk { padding: 25px; }
+}
+@media (min-width: 761px) and (max-width: 960px) {
+  .access-layout { display: flex; flex-direction: column; gap: 22px; }
+  .campus-intro { display: contents; }
+  .campus-intro h1.kinetic-title { color: var(--green); font-size: 84px; margin: 0; }
+  .campus-intro > p { color: var(--muted); max-width: 560px; }
+  .access-desk { order: 1; width: 100%; }
+  .campus-cover { order: 2; width: 100%; margin: 0; border-radius: 10px; }
+  .campus-contact-line { display: none; }
+}
+@media(max-width:760px) {
+  .access-page { padding-inline: 20px; }
+  .access-layout { display: flex; gap: 22px; padding-block: 26px; }
+  .campus-intro { display: contents; }
+  .campus-intro h1.kinetic-title { color: var(--green); font-size: clamp(54px,12vw,84px); line-height: .94; margin: 0; }
+  .campus-intro > p { color: var(--muted); max-width: 450px; margin: 0; font-size: 13px; }
+  .access-desk { padding: 25px; }
+  .campus-cover { margin: 0; border-radius: 10px; }
+  .campus-cover > img { height: 230px; }
+  .campus-contact-line { display: none; }
+  .campus-journal { gap: 22px 16px; }
+  .campus-journal img { height: 135px; }
+  .page-heading h1 { font-size: 42px; }
+  .page-heading { align-items: flex-start; }
+  .clearance-desk > h2 { font-size: 42px; }
+  .college-website { width: 44px; height: 44px; justify-content: center; flex-shrink: 0; }
+  .topbar-actions { gap: 8px; }
+}
+@media(max-width:480px) {
+  .access-page { padding-inline: 16px; }
+  .access-desk { padding: 22px; }
+  .access-desk h2 { font-size: 36px; }
+  .page-heading h1 { overflow-wrap: anywhere; }
+  .campus-journal img { height: 110px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kinetic-line > span { animation: none !important; transform: none !important; opacity: 1 !important; }
+}
+@media print {
+  .kinetic-line > span { animation: none !important; transform: none !important; opacity: 1 !important; }
 }

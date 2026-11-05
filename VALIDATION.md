@@ -38,3 +38,10 @@ See DESIGN.md for the three fetched skills, design rationale and scope boundarie
 - Existing 22 state/workflow scenarios, 46 browser assertions, 32 mobile role pages and 26 keyboard/error interaction checks passed. Reset checks wait for the new asynchronous file deletion before inspecting restored data.
 - Reviewed rendered access screens and student dashboard; corrected upload guidance contrast and moved mobile access controls ahead of the main photograph.
 - Browser-side owner checks demonstrate behavior; they are not security against someone controlling the browser. PDF/JPEG/PNG signature checks are not malware scanning. No production authentication, real admissions or remote upload delivery were tested. Original direct-file and screen-reader limitations still apply.
+
+## Modern Web Design / kinetic typography — 5 November 2026
+
+- 20 targeted browser checks passed: locally loaded Barlow Condensed display font, transform/opacity reveal completes, changing access tabs does not replay it, reduced-motion immediately shows static text, no clipping or horizontal overflow at six widths from 320 to 1440px, entry axe scan, no runtime errors or external resource requests.
+- Re-ran 27 account/upload checks, 46 workflow assertions, 26 keyboard/error checks and all 32 mobile role pages; all passed.
+- Reviewed rendered access, student and admin screens. The tablet headline clipping found during testing was fixed by switching the access layout to one column through 960px.
+- See MODERN-DESIGN.md for skill sources, intentional motion limits and performance limitations. The original file:// and screen-reader testing limits still apply.
