@@ -44,6 +44,8 @@ There are no network-loaded frameworks or fonts. Sample data is loaded with a re
 
 Open **My clearance** after submitting an application. A four-stage tracker shows application, assessment, dues/payment and certificate status, with the student's next action. **Application history** expands to show only that request's recorded updates in Pakistan time; internal audit notes are excluded. Receipt submission, Accounts verification and final departmental clearance remain distinct. Zero-dues, corrections, returned receipts and revoked certificates have explicit guidance.
 
+The tracker also provides direct buttons for correcting an application, reviewing a challan, submitting sample receipt details and opening an issued certificate. Returned-receipt and correction reasons appear beside the action. Only departments that still require clearance are listed in the pending summary. Revoked certificates direct the student to college contact/help.
+
 [Clearance tracker preview](assets/previews/clearance.png)
 
 ## Demonstrate a complete clearance

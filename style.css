@@ -763,6 +763,16 @@ h2, h3 { font-weight: 700; }
 .tracking-next > span { color: #3a6548; padding-top: 2px; }
 .tracking-next h3 { color: #214832; font-size: 15px; margin: 0 0 7px; }
 .tracking-next p { font-size: 12px; line-height: 1.8; color: #465e4d; margin: 0; max-width: 820px; }
+.tracking-next > div { min-width: 0; }
+.tracking-next .tracking-reason { margin-top: 12px; padding-left: 12px; border-left: 3px solid #7d975c; overflow-wrap: anywhere; }
+.tracking-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.tracking-actions .btn { min-height: 44px; }
+.tracking-pending { padding: 20px 26px 0; }
+.tracking-pending h3 { font: 600 13px/1.5 var(--body-font); color: #254c36; margin: 0 0 9px; }
+.tracking-pending ul { list-style: none; padding: 0; margin: 0; }
+.tracking-pending li { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 12px; padding: 12px 0; border-bottom: 1px solid #e3eade; }
+.tracking-pending li > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+@media(max-width:580px) { .tracking-pending { padding-inline: 20px; } .tracking-actions .btn { flex: 1 1 100%; } }
 .tracking-history { padding: 0 26px; }
 .tracking-history summary { cursor: pointer; min-height: 56px; padding-block: 18px; font-size: 13px; font-weight: 600; color: #254c36; }
 .tracking-history summary:focus-visible { outline: 3px solid #608c39; outline-offset: 2px; }

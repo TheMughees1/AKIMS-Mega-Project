@@ -60,3 +60,9 @@ See DESIGN.md for the three fetched skills, design rationale and scope boundarie
 - Verified request-scoped event history, exclusion of internal notes, keyboard expansion, focusable scrolling, an automated WCAG A/AA scan and layouts at 320, 390, 768, 1024 and 1440 px. Reviewed the actual desktop request screenshot.
 - All 46 existing end-to-end assertions passed, including the six role dashboard accessibility scans. No runtime exceptions occurred. Workflow rules and stored data schema were unchanged.
 - Legacy records without event logs show only stored application/certificate dates. Historic department events use generic labels because existing audit entries do not store department identifiers; current named decisions remain in Department verification. Browser-only privacy and direct-file testing limitations still apply.
+
+## Direct student actions — 10 November 2026
+
+- 42 focused tracker/action checks passed, including real correction submission through the shortcut, correct challan preview, receipt keyboard activation, focus restoration, issued-certificate preview, revoked-certificate help, pending-department filtering, returned-receipt reasons and receipt-button removal during Accounts review.
+- Checked layouts at 320–1440 px and the configured accessibility scan. Reviewed the rendered desktop request screen. All 46 existing end-to-end workflow assertions passed, with no JavaScript exceptions or remote runtime resources.
+- Shortcuts reuse the existing forms and document controls; they neither settle payments nor bypass authorization. Existing request ownership checks remain in place. This remains a local demonstration, with the previously documented production and browser-testing limits.

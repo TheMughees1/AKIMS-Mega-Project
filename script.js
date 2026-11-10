@@ -337,6 +337,16 @@
     else if (r.status === 'ready') { title = 'Waiting for final authorization'; message = 'All mandatory checks are complete. Administration must authorize clearance before a certificate becomes available.'; }
     else if (r.challan?.status === 'verified') { title = 'Payment verified; department clearance remains'; message = 'Accounts has verified the sample payment. Remaining departments must explicitly clear your request before final authorization.'; }
     else if (assessed && charges) { title = 'Administration is preparing your challan'; message = 'Confirmed dues have been assessed. Your sample challan will appear after Administration issues it.'; }
+    const actionButton = (label, control, primary = false) => button(label, 'tracking-action', `data-id="${h(r.id)}" data-control="${control}"`, primary ? 'primary' : 'secondary');
+    let shortcuts = '';
+    if (corrected) shortcuts = actionButton('Correct application', 'resubmit', true);
+    else if (revoked) shortcuts = actionButton('Contact & help', 'help', true);
+    else if (r.certificate) shortcuts = actionButton('Open certificate', 'certificate', true);
+    else if (r.challan?.status === 'unpaid') shortcuts = actionButton('Submit sample receipt', 'receipt', true) + actionButton('Review challan', 'challan');
+    else if (r.challan) shortcuts = actionButton('Review challan', 'challan');
+    const reason = corrected ? r.correctionNote : revoked ? r.certificate.reason : r.challan?.status === 'unpaid' ? r.challan.reviewNote : '';
+    const waiting = r.requirements.filter(q => q.status !== 'cleared');
+    const pending = !corrected && !revoked && !r.certificate && waiting.length ? `<div class="tracking-pending"><h3>Departments still to clear</h3><ul>${waiting.map(q => `<li><span>${h(department(q.departmentId).name)}</span>${badge(q.status)}</li>`).join('')}</ul></div>` : '';
     const labels = {createRequest:'Application received',requestCorrection:'Correction requested',resubmit:'Corrected application received',addIssue:'An outstanding item was recorded',resolveIssue:'An issue was resolved',assessDepartment:'Department assessment updated',issueChallan:'Sample challan issued',submitReceipt:'Sample receipt submitted',reviewReceipt:'Receipt review completed',finalize:'Clearance authorized; certificate issued',revokeCertificate:'Certificate revoked'};
     const events = state.audit.filter(e => e.requestId === r.id && Object.hasOwn(labels,e.action)).map(e => ({at:e.createdAt,label:e.action === 'reviewReceipt' ? (e.detail === 'Sample receipt returned for correction.' ? 'Receipt returned for correction' : 'Sample payment verified') : e.action === 'assessDepartment' && e.detail === 'Department assessment: cleared.' ? 'Department clearance approved' : labels[e.action]}));
     // Older demonstration records can lack event logs: show only dates actually stored.
@@ -345,7 +355,7 @@
     if (revoked && !events.some(e => e.label === labels.revokeCertificate)) events.push({at:r.certificate.revokedAt,label:labels.revokeCertificate});
     events.sort((a,b)=>new Date(b.at)-new Date(a.at));
     const stamp = value => new Date(value).toLocaleString('en-GB',{timeZone:'Asia/Karachi',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
-    return `<section class="request-tracking" aria-labelledby="tracking-title"><div class="tracking-heading"><span class="eyebrow">Your clearance journey</span><h2 id="tracking-title">Every step, in view.</h2></div><ol class="tracking-stages">${stages.map(([name,status,tone],i)=>`<li class="track-${tone}"><span class="stage-number" aria-hidden="true">${tone === 'done' ? icon('check') : i+1}</span><div><strong>${h(name)}</strong><span>${h(status)}</span></div></li>`).join('')}</ol><div class="tracking-next"><span>${icon('clipboard')}</span><div><h3>${h(title)}</h3><p>${h(message)}</p></div></div><details class="tracking-history"><summary>Application history <span>${events.length} recorded updates</span></summary><p class="small muted">Newest first · Pakistan time. Only this application's recorded events are shown.</p><ol tabindex="0" aria-label="Recorded application updates">${events.map(e=>`<li><span class="history-dot" aria-hidden="true"></span><div><strong>${h(e.label)}</strong><time datetime="${h(e.at)}">${h(stamp(e.at))} PKT</time></div></li>`).join('')}</ol></details></section>`;
+    return `<section class="request-tracking" aria-labelledby="tracking-title"><div class="tracking-heading"><span class="eyebrow">Your clearance journey</span><h2 id="tracking-title">Every step, in view.</h2></div><ol class="tracking-stages">${stages.map(([name,status,tone],i)=>`<li class="track-${tone}"><span class="stage-number" aria-hidden="true">${tone === 'done' ? icon('check') : i+1}</span><div><strong>${h(name)}</strong><span>${h(status)}</span></div></li>`).join('')}</ol><div class="tracking-next"><span>${icon('clipboard')}</span><div><h3>${h(title)}</h3><p>${h(message)}</p>${reason ? `<p class="tracking-reason"><strong>Recorded reason:</strong> ${h(reason)}</p>` : ''}${shortcuts ? `<div class="tracking-actions">${shortcuts}</div>` : ''}</div></div>${pending}<details class="tracking-history"><summary>Application history <span>${events.length} recorded updates</span></summary><p class="small muted">Newest first · Pakistan time. Only this application's recorded events are shown.</p><ol tabindex="0" aria-label="Recorded application updates">${events.map(e=>`<li><span class="history-dot" aria-hidden="true"></span><div><strong>${h(e.label)}</strong><time datetime="${h(e.at)}">${h(stamp(e.at))} PKT</time></div></li>`).join('')}</ol></details></section>`;
   }
   function requestDetail(r) {
     const s = student(r.studentId);
@@ -629,6 +639,18 @@
       if (action === 'account-help') {showDialog('Local account help', '<p>Use the email and demo password you created in this browser. Accounts do not sync between browsers or computers. Your sign-in email stays the same if you edit your profile contact email.</p><p>This offline edition cannot send reset emails. You can create another fictional account with a different registration and email, or use a sample workspace below.</p>'); return;}
       if (!actorId) return;
       const id = el.dataset.id;
+      if (action === 'tracking-action') {
+        const request = getRequest(id);
+        if (role() !== 'student' || request.studentId !== actor().studentId) throw new Error('This action is only available for your own application.');
+        const control = el.dataset.control;
+        if (control === 'help') { navigate('help'); return; }
+        const targets = {resubmit:'resubmit',receipt:'receipt',challan:'document',certificate:'document'};
+        const targetAction = targets[control];
+        const target = targetAction && [...document.querySelectorAll('main [data-action]')].find(b => b.dataset.action === targetAction && b.dataset.id === id && (!['challan','certificate'].includes(control) || b.dataset.kind === control));
+        if (!target || target.disabled) throw new Error('This action is no longer available. Review the current application status.');
+        target.click();
+        return;
+      }
       if (action === 'upload-file') showForm('Add a sample document', 'upload-file', select('Document category','category',['Student card','Academic document','Payment receipt','Other document'].map(x=>option(x,x)).join(''))+'<div class="field"><label for="sample-document">Sample file</label><input id="sample-document" name="document" type="file" accept=".pdf,.jpg,.jpeg,.png" required aria-describedby="upload-help"><p id="upload-help" class="small muted">PDF, JPEG or PNG, up to 5 MB. Use sample files only. Saving a receipt here does not verify payment.</p></div>', 'Save to my documents');
       else if (action === 'preview-file') {const f = ownedFile(id); if(previewURL) URL.revokeObjectURL(previewURL); previewURL = URL.createObjectURL(f.blob); showDialog(f.name, (f.type.startsWith('image/') ? `<img class="file-preview" src="${previewURL}" alt="Preview of ${h(f.name)}">` : '<p>Download this PDF to view it in your PDF reader.</p>')+`<p>${h(f.category)} · ${Math.ceil(f.size/1024)} KB · Saved ${date(f.createdAt)}</p>`,button('Download file','download-file',`data-id="${h(f.id)}"`));}
       else if (action === 'download-file') {const f = ownedFile(id); download(f.name,f.blob,f.type);}
