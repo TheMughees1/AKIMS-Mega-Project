@@ -4,7 +4,13 @@ A plain **HTML, CSS and JavaScript** demonstration of the AKIMS clearance portal
 
 **[Download this edition](https://github.com/TheMughees1/AKIMS-Mega-Project/archive/refs/heads/akims-simple.zip)** · [Roman Urdu instructions](START-HERE.txt)
 
-[Modern typography and applied skill](MODERN-DESIGN.md) · [Original design direction](DESIGN.md) · [Validation and known limits](VALIDATION.md)
+[Premium design and review](PREMIUM-DESIGN.md) · [Applied modern design skill](MODERN-DESIGN.md) · [Validation and known limits](VALIDATION.md)
+
+The premium revision pairs real campus photography and bold kinetic type with a working sign-in panel. Student home gives clearance its own focused workspace, an actual departmental completion ring and a personal document desk. Campus photographs can be switched manually or opened with the keyboard; reduced-motion preferences are respected.
+
+![AKIMS student access preview](assets/previews/access.png)
+
+[Student dashboard preview](assets/previews/student.png) · [Mobile preview](assets/previews/mobile.png)
 
 ## Open it
 

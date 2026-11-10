@@ -39,3 +39,7 @@ The entry uses a captioned gallery; Student home uses the existing campus-sessio
 ## User-requested typography update
 
 The later modern/kinetic design request replaces website-derived Playfair Display with locally bundled Barlow Condensed 700/800 (SIL Open Font License), paired with the existing Inter UI font. The college logo, emerald/gold colors and photographs are retained. This is a portal-specific design direction, not a claim that the public college website uses Barlow Condensed. See MODERN-DESIGN.md.
+
+## Premium composition — 10 November 2026
+
+The entrance now uses a framed campus photograph, a uniform dark overlay for text contrast and manual selectors for campus, laboratory and student-life scenes. Gallery photographs open in a native dialog. The portal uses pine-green surfaces and a light navigation rail; Inter handles working headings and Barlow Condensed is reserved for display statements. All original image files remain byte-for-byte unchanged. Screenshots in `assets/previews` document the demo design and are not loaded by the application.

@@ -1,4 +1,4 @@
-# Validation — 4 November 2026
+# Validation — latest revision 10 November 2026
 
 This is validation of a fictional, browser-local demonstration, not a production security assessment.
 
@@ -45,3 +45,11 @@ See DESIGN.md for the three fetched skills, design rationale and scope boundarie
 - Re-ran 27 account/upload checks, 46 workflow assertions, 26 keyboard/error checks and all 32 mobile role pages; all passed.
 - Reviewed rendered access, student and admin screens. The tablet headline clipping found during testing was fixed by switching the access layout to one column through 960px.
 - See MODERN-DESIGN.md for skill sources, intentional motion limits and performance limitations. The original file:// and screen-reader testing limits still apply.
+
+## Premium campus revision — 10 November 2026
+
+- 47 focused checks passed for manual campus scene selection, preservation of typed account details, keyboard-opened photographs, Escape and focus return, hero/dialog axe scans, eight entry widths (320, 390, 768, 850, 960, 961, 1024, 1440), and the completion ring reflecting actual departmental approval. Submitted-request dashboards also fit 320, 390, 768, 900 and 1024 px.
+- Repeated the 27 account/upload assertions, 46 workflow assertions, 26 keyboard/error checks and all 32 mobile role pages; all passed. The configured WCAG A/AA axe scans passed on all six role dashboards, sign-in, sign-up and documents.
+- 20 typography/motion checks passed. No JavaScript errors or external runtime requests occurred in the tested journeys. Source college images, local password/document code and the workflow data module remain unchanged.
+- Visual review covered desktop/mobile access, student home, Administration, documents and inventory. Fixed the narrowest-screen headline crop, low-contrast secondary labels, a tablet status-layout conflict that appeared after a request was submitted, and a search-icon/text overlap. A focused browser check verified inventory search at desktop and mobile widths after the padding correction.
+- Screenshots in assets/previews show the actual application. This edition adds no build step or runtime dependency. The previous direct-file, assistive-technology, production-security and real-device performance limitations still apply.
