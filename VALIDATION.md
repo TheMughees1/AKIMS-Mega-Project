@@ -53,3 +53,10 @@ See DESIGN.md for the three fetched skills, design rationale and scope boundarie
 - 20 typography/motion checks passed. No JavaScript errors or external runtime requests occurred in the tested journeys. Source college images, local password/document code and the workflow data module remain unchanged.
 - Visual review covered desktop/mobile access, student home, Administration, documents and inventory. Fixed the narrowest-screen headline crop, low-contrast secondary labels, a tablet status-layout conflict that appeared after a request was submitted, and a search-icon/text overlap. A focused browser check verified inventory search at desktop and mobile widths after the padding correction.
 - Screenshots in assets/previews show the actual application. This edition adds no build step or runtime dependency. The previous direct-file, assistive-technology, production-security and real-device performance limitations still apply.
+
+## Student clearance tracking — 10 November 2026
+
+- 24 targeted browser checks passed across submitted requests, corrections/resubmission, assessed charges before billing, unpaid/submitted/returned/verified receipts, remaining department clearance, final authorization, revocation and a new zero-dues request.
+- Verified request-scoped event history, exclusion of internal notes, keyboard expansion, focusable scrolling, an automated WCAG A/AA scan and layouts at 320, 390, 768, 1024 and 1440 px. Reviewed the actual desktop request screenshot.
+- All 46 existing end-to-end assertions passed, including the six role dashboard accessibility scans. No runtime exceptions occurred. Workflow rules and stored data schema were unchanged.
+- Legacy records without event logs show only stored application/certificate dates. Historic department events use generic labels because existing audit entries do not store department identifiers; current named decisions remain in Department verification. Browser-only privacy and direct-file testing limitations still apply.

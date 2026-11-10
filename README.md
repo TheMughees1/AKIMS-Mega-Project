@@ -40,6 +40,12 @@ AKIMS-Portal/
 
 There are no network-loaded frameworks or fonts. Sample data is loaded with a regular script tag so the application works under `file://` without fetching a JSON file. To change the starting examples, edit the `seed` in `assets/data.js`, save and choose **Reset demo** in the portal. Reset replaces current demo changes.
 
+## Student clearance tracker
+
+Open **My clearance** after submitting an application. A four-stage tracker shows application, assessment, dues/payment and certificate status, with the student's next action. **Application history** expands to show only that request's recorded updates in Pakistan time; internal audit notes are excluded. Receipt submission, Accounts verification and final departmental clearance remain distinct. Zero-dues, corrections, returned receipts and revoked certificates have explicit guidance.
+
+[Clearance tracker preview](assets/previews/clearance.png)
+
 ## Demonstrate a complete clearance
 
 - **Student:** submit a clearance application and see departmental progress.

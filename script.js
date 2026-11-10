@@ -312,6 +312,41 @@
     return requestDetail(r) + (own.length > 1 ? panel('Previous requests', requestTable(own.filter(q => q.id !== r.id))) : '') +
       (canNew ? '<div class="form-actions">' + button('Start another request', 'new-request') + '</div>' : '');
   }
+  // A student-facing projection of this request only; internal audit notes stay in Administration.
+  function studentTracking(r) {
+    if (role() !== 'student' || r.studentId !== actor().studentId) return '';
+    const corrected = r.status === 'correction_requested';
+    const assessed = r.requirements.every(q => q.status !== 'pending') && !r.issues.some(i => i.resolution === 'open');
+    const charges = r.issues.some(i => ['charged', 'paid'].includes(i.resolution));
+    const cleared = r.requirements.filter(q => q.status === 'cleared').length;
+    const revoked = !!r.certificate?.revokedAt;
+    const paymentDone = r.challan ? r.challan.status === 'verified' : assessed && !charges;
+    const stages = [
+      ['Application', corrected ? 'Correction needed' : 'Received', corrected ? 'attention' : 'done'],
+      ['Assessment', assessed ? 'Assessment complete' : 'Department review', assessed ? 'done' : 'current'],
+      ['Dues & payment', r.challan ? ({unpaid:'Receipt needed',submitted:'Accounts review',verified:'Verified'}[r.challan.status] || 'Pending') : paymentDone ? 'No payment required' : 'Awaiting assessment', paymentDone ? 'done' : r.challan ? 'current' : 'pending'],
+      ['Certificate', revoked ? 'Revoked' : r.certificate ? 'Issued' : r.status === 'ready' ? 'Awaiting authorization' : 'Pending final approval', revoked ? 'attention' : r.certificate ? 'done' : r.status === 'ready' ? 'current' : 'pending']
+    ];
+    let title = 'Departments are reviewing your request';
+    let message = `${cleared} of ${r.requirements.length} departments have cleared it. Review department notes and outstanding items below. A completed assessment is not final departmental clearance.`;
+    if (corrected) { title = 'Your action: correct your application'; message = 'Read the correction instructions below and choose Correct & resubmit.'; }
+    else if (revoked) { title = 'Your certificate has been revoked'; message = 'This certificate is no longer valid. Read the recorded reason below and contact the college for review.'; }
+    else if (r.certificate) { title = 'Your clearance is complete'; message = 'Open your clearance certificate below to print or save a demonstration copy.'; }
+    else if (r.challan?.status === 'unpaid') { title = 'Your action: submit sample receipt details'; message = r.challan.reviewNote ? 'Accounts returned the receipt. Read the reason under Challan & payment, then submit corrected sample details.' : 'Review your sample challan under Challan & payment, then submit sample receipt details. Do not make a real payment in this demo.'; }
+    else if (r.challan?.status === 'submitted') { title = 'Accounts is checking your receipt'; message = 'Receipt submission is not payment verification. Accounts must confirm the sample reference and exact amount.'; }
+    else if (r.status === 'ready') { title = 'Waiting for final authorization'; message = 'All mandatory checks are complete. Administration must authorize clearance before a certificate becomes available.'; }
+    else if (r.challan?.status === 'verified') { title = 'Payment verified; department clearance remains'; message = 'Accounts has verified the sample payment. Remaining departments must explicitly clear your request before final authorization.'; }
+    else if (assessed && charges) { title = 'Administration is preparing your challan'; message = 'Confirmed dues have been assessed. Your sample challan will appear after Administration issues it.'; }
+    const labels = {createRequest:'Application received',requestCorrection:'Correction requested',resubmit:'Corrected application received',addIssue:'An outstanding item was recorded',resolveIssue:'An issue was resolved',assessDepartment:'Department assessment updated',issueChallan:'Sample challan issued',submitReceipt:'Sample receipt submitted',reviewReceipt:'Receipt review completed',finalize:'Clearance authorized; certificate issued',revokeCertificate:'Certificate revoked'};
+    const events = state.audit.filter(e => e.requestId === r.id && Object.hasOwn(labels,e.action)).map(e => ({at:e.createdAt,label:e.action === 'reviewReceipt' ? (e.detail === 'Sample receipt returned for correction.' ? 'Receipt returned for correction' : 'Sample payment verified') : e.action === 'assessDepartment' && e.detail === 'Department assessment: cleared.' ? 'Department clearance approved' : labels[e.action]}));
+    // Older demonstration records can lack event logs: show only dates actually stored.
+    if (!events.some(e => e.label === 'Application received')) events.unshift({at:r.createdAt,label:'Application received'});
+    if (r.certificate && !events.some(e => e.label === labels.finalize)) events.push({at:r.certificate.issuedAt,label:labels.finalize});
+    if (revoked && !events.some(e => e.label === labels.revokeCertificate)) events.push({at:r.certificate.revokedAt,label:labels.revokeCertificate});
+    events.sort((a,b)=>new Date(b.at)-new Date(a.at));
+    const stamp = value => new Date(value).toLocaleString('en-GB',{timeZone:'Asia/Karachi',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+    return `<section class="request-tracking" aria-labelledby="tracking-title"><div class="tracking-heading"><span class="eyebrow">Your clearance journey</span><h2 id="tracking-title">Every step, in view.</h2></div><ol class="tracking-stages">${stages.map(([name,status,tone],i)=>`<li class="track-${tone}"><span class="stage-number" aria-hidden="true">${tone === 'done' ? icon('check') : i+1}</span><div><strong>${h(name)}</strong><span>${h(status)}</span></div></li>`).join('')}</ol><div class="tracking-next"><span>${icon('clipboard')}</span><div><h3>${h(title)}</h3><p>${h(message)}</p></div></div><details class="tracking-history"><summary>Application history <span>${events.length} recorded updates</span></summary><p class="small muted">Newest first · Pakistan time. Only this application's recorded events are shown.</p><ol tabindex="0" aria-label="Recorded application updates">${events.map(e=>`<li><span class="history-dot" aria-hidden="true"></span><div><strong>${h(e.label)}</strong><time datetime="${h(e.at)}">${h(stamp(e.at))} PKT</time></div></li>`).join('')}</ol></details></section>`;
+  }
   function requestDetail(r) {
     const s = student(r.studentId);
     const admin = role() === 'admin', staff = role() === 'staff';
@@ -326,7 +361,7 @@
     }
     if (role() === 'student' && r.status === 'correction_requested') actions += button('Correct & resubmit', 'resubmit', `data-id="${h(r.id)}"`, 'primary');
     if (admin && r.certificate && !r.certificate.revokedAt) actions += button('Revoke certificate', 'revoke', `data-id="${h(r.id)}"`, 'danger');
-    return heading('Clearance request', s.name, r.id + ' · ' + s.roll, back + actions) +
+    return heading('Clearance request', s.name, r.id + ' · ' + s.roll, back + actions) + studentTracking(r) +
       (r.status === 'correction_requested' ? `<div class="notice warning"><strong>Correction requested</strong><p>${h(r.correctionNote)}</p></div>` : '') +
       `<div class="stats-strip">${stat('Request status', statusName(r.status), 'Submitted ' + date(r.createdAt))}${stat('Department checks', r.requirements.filter(d => d.status === 'cleared').length + ' / ' + r.requirements.length, 'Mandatory demo requirements')}${stat('Assessed charges', money(r.issues.filter(i => ['charged', 'paid'].includes(i.resolution)).reduce((n, i) => n + i.amount, 0)), r.challan ? 'Challan ' + r.challan.number : 'No challan issued')}</div>
       <div class="two-column"><div>${panel('Department verification', `<div class="department-list">${requirements.map(q => `<div class="department-row"><div><strong>${h(department(q.departmentId).name)}</strong><p class="small muted">${h(q.note || 'Assessment and item verification')}</p>${badge(q.status)}</div>${canReview(q.departmentId) && !closed && r.status !== 'correction_requested' ? `<div class="form-actions">${r.challan ? '' : button('Record issue', 'add-issue', `data-id="${h(r.id)}" data-dept="${q.departmentId}"`, 'ghost small')}${q.status !== 'cleared' ? button('Assessment complete', 'assess', `data-id="${h(r.id)}" data-dept="${q.departmentId}" data-status="reviewed"`, 'secondary small') + button('Clear department', 'assess', `data-id="${h(r.id)}" data-dept="${q.departmentId}" data-status="cleared"`, 'primary small') : ''}</div>` : ''}</div>`).join('')}</div>`)}
